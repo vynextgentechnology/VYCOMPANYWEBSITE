@@ -6,7 +6,7 @@ const DESKTOP_FRAME_PREFIX = "/hero-frames/ezgif-frame-";
 const MOBILE_FRAME_PREFIX = "/hero-frames-mobile/ezgif-frame-";
 const FRAME_EXT = ".jpg";
 const AUDIO_URL = "/audio/hero-audio.mp3";
-const AUDIO_DURATION = 10.762; // Exact duration of hero audio in seconds
+const AUDIO_DURATION = 10.762;
 
 type PerformanceTier = "HIGH" | "MEDIUM" | "LOW";
 
@@ -16,17 +16,24 @@ export function HeroScrollAnimation() {
   const headerRef = useRef<HTMLDivElement>(null);
   const bottomCueRef = useRef<HTMLDivElement>(null);
 
-  // Performance Tier: LOW (Mobile), MEDIUM (Tablets), HIGH (Desktop)
-  const [tier, setTier] = useState<PerformanceTier>("HIGH");
-  const tierRef = useRef<PerformanceTier>("HIGH");
-  const prefersReducedMotionRef = useRef<boolean>(false);
+  // Performance Tier: LOW (Mobile <768px), MEDIUM (Tablets 768-1023px), HIGH (Desktop >=1024px)
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+  const isMobileRef = useRef<boolean>(isMobile);
+  const [tier, setTier] = useState<PerformanceTier>(isMobile ? "LOW" : "HIGH");
+  const tierRef = useRef<PerformanceTier>(tier);
 
-  // Cached frame images (Stored as compressed HTMLImageElement to keep mobile RAM < 20MB)
+  // Cached frame images: dynamic sliding-window buffer
   const imagesRef = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES).fill(null));
   const isLoadedRef = useRef<boolean[]>(new Array(TOTAL_FRAMES).fill(false));
+  const loadingSetRef = useRef<Set<number>>(new Set());
   const nearestLoadedRef = useRef<number[]>(new Array(TOTAL_FRAMES).fill(0));
 
-  // Canvas dimensions & pre-computed cover geometry cache (0.1ms direct GPU blits, ZERO per-frame layout math)
+  // Canvas dimensions & pre-computed cover geometry cache
   const canvasWidthRef = useRef<number>(0);
   const canvasHeightRef = useRef<number>(0);
   const renderWRef = useRef<number>(0);
@@ -35,7 +42,7 @@ export function HeroScrollAnimation() {
   const offsetYRef = useRef<number>(0);
   const renderedFrameRef = useRef<number>(-1);
 
-  // Single scheduled animation update state (Never heavy work inside scroll listener)
+  // Scheduled animation update state
   const targetProgressRef = useRef<number>(0);
   const currentProgressRef = useRef<number>(0);
   const isTickingRef = useRef<boolean>(false);
@@ -47,14 +54,10 @@ export function HeroScrollAnimation() {
   const lastScrollTimeRef = useRef<number>(0);
 
   // Sound Engine (Web Audio API with PCM Buffers for exact forward & reverse scroll matching)
-  // Default to muted on mobile devices to prevent battery drain and unexpected audio session activation
-  const [isMuted, setIsMuted] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth <= 768 || "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0);
-    }
-    return false;
-  });
+  const [isMuted, setIsMuted] = useState<boolean>(true);
   const [isAudioActive, setIsAudioActive] = useState<boolean>(false);
+  const isMutedRef = useRef<boolean>(true);
+
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const forwardBufferRef = useRef<AudioBuffer | null>(null);
@@ -65,12 +68,7 @@ export function HeroScrollAnimation() {
   const sourceOffsetTimeRef = useRef<number>(0);
   const currentPlaybackRateRef = useRef<number>(1);
   const scrollStopTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isMutedRef = useRef<boolean>(
-    typeof window !== "undefined" && (window.innerWidth <= 768 || "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0))
-  );
   const isAudioLoadedRef = useRef<boolean>(false);
-
-  // Fallback HTML5 audio element
   const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Keep isMutedRef in sync with state
@@ -89,16 +87,16 @@ export function HeroScrollAnimation() {
     }
   }, [isMuted]);
 
-  // Determine current frame URL based on device capability tier
-  // LOW/MEDIUM tier (mobile/tablets) loads dedicated 800px mobile assets (/hero-frames-mobile/)
-  // HIGH tier (desktop) loads full 1920x1080 frames (/hero-frames/)
+  // Determine current frame URL based on device capability tier:
+  // LOW (<768px) and MEDIUM (768-1023px): lightweight 800px frames (/hero-frames-mobile/)
+  // HIGH (>=1024px): full 1920x1080 frames (/hero-frames/)
   const getFrameUrl = useCallback((index: number, currentTier: PerformanceTier) => {
     const frameNumber = String(index + 1).padStart(3, "0");
     const prefix = currentTier === "HIGH" ? DESKTOP_FRAME_PREFIX : MOBILE_FRAME_PREFIX;
     return `${prefix}${frameNumber}${FRAME_EXT}`;
   }, []);
 
-  // Update nearest loaded frame lookup table whenever a new frame finishes loading
+  // Update nearest loaded frame lookup table whenever a frame finishes loading
   const updateNearestLookup = useCallback((loadedIdx: number) => {
     const lookup = nearestLoadedRef.current;
     lookup[loadedIdx] = loadedIdx;
@@ -109,7 +107,7 @@ export function HeroScrollAnimation() {
       } else {
         let closest = lookup[i];
         let minDiff = Math.abs(i - closest);
-        for (let check of [loadedIdx, lookup[Math.max(0, i - 1)], lookup[Math.min(TOTAL_FRAMES - 1, i + 1)]]) {
+        for (const check of [loadedIdx, lookup[Math.max(0, i - 1)], lookup[Math.min(TOTAL_FRAMES - 1, i + 1)]]) {
           if (isLoadedRef.current[check] && Math.abs(i - check) < minDiff) {
             closest = check;
             minDiff = Math.abs(i - check);
@@ -120,7 +118,7 @@ export function HeroScrollAnimation() {
     }
   }, []);
 
-  // Draw frame directly to canvas - Instant hardware blit with pre-calculated cover coordinates
+  // Hardware-accelerated direct canvas draw
   const drawFrame = useCallback((frameIdx: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -142,24 +140,114 @@ export function HeroScrollAnimation() {
     renderedFrameRef.current = frameIdx;
   }, []);
 
-  // Capability check & Canvas sizing: Intelligently clamps DPR to prevent mobile VRAM bloat
+  // Load a single frame asynchronously
+  const loadSingleFrame = useCallback((idx: number, currentTier: PerformanceTier): Promise<void> => {
+    if (idx < 0 || idx >= TOTAL_FRAMES) return Promise.resolve();
+    if (isLoadedRef.current[idx] && imagesRef.current[idx]) return Promise.resolve();
+    if (loadingSetRef.current.has(idx)) return Promise.resolve();
+
+    loadingSetRef.current.add(idx);
+
+    return new Promise<void>((resolve) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = getFrameUrl(idx, currentTier);
+
+      const onDone = () => {
+        loadingSetRef.current.delete(idx);
+        imagesRef.current[idx] = img;
+        isLoadedRef.current[idx] = true;
+        updateNearestLookup(idx);
+
+        const targetIdx = Math.round(currentProgressRef.current * (TOTAL_FRAMES - 1));
+        if (idx === 0 || targetIdx === idx) {
+          drawFrame(idx);
+        }
+        resolve();
+      };
+
+      if (img.complete && img.naturalWidth > 0) {
+        onDone();
+      } else {
+        img.onload = onDone;
+        img.onerror = () => {
+          loadingSetRef.current.delete(idx);
+          resolve();
+        };
+      }
+    });
+  }, [getFrameUrl, updateNearestLookup, drawFrame]);
+
+  // Dynamic Scroll Buffer & Memory Management:
+  // On mobile (<768px): loads every 2nd frame in buffer window, keeping memory small & fast
+  // On desktop: loads all frames in buffer window
+  const manageFrameBuffer = useCallback((centerIdx: number, direction: "down" | "up" = "down") => {
+    const isMob = isMobileRef.current;
+    const currentTier = tierRef.current;
+    const bufAhead = isMob ? 8 : 14;
+    const bufBehind = isMob ? 4 : 8;
+    const evictDist = isMob ? 18 : 26;
+    const step = isMob ? 2 : 1;
+
+    const start = Math.max(0, centerIdx - bufBehind);
+    const end = Math.min(TOTAL_FRAMES - 1, centerIdx + bufAhead);
+
+    // Directional priority: load ahead of scroll direction first
+    const framesToLoad: number[] = [];
+    if (direction === "down") {
+      for (let i = centerIdx; i <= end; i += step) framesToLoad.push(i);
+      for (let i = centerIdx - step; i >= start; i -= step) framesToLoad.push(i);
+    } else {
+      for (let i = centerIdx; i >= start; i -= step) framesToLoad.push(i);
+      for (let i = centerIdx + step; i <= end; i += step) framesToLoad.push(i);
+    }
+
+    // Preserve frame 0 as root fallback anchor
+    if (!isLoadedRef.current[0] && !loadingSetRef.current.has(0)) {
+      loadSingleFrame(0, currentTier);
+    }
+
+    // Dispatch asynchronous fetch for unbuffered frames
+    for (const idx of framesToLoad) {
+      if (!isLoadedRef.current[idx] && !loadingSetRef.current.has(idx)) {
+        loadSingleFrame(idx, currentTier);
+      }
+    }
+
+    // Memory Eviction: release decoded image bitmaps outside the buffer
+    for (let i = 0; i < TOTAL_FRAMES; i++) {
+      if (i !== 0 && Math.abs(i - centerIdx) > evictDist) {
+        const oldImg = imagesRef.current[i];
+        if (oldImg) {
+          oldImg.onload = null;
+          oldImg.onerror = null;
+          oldImg.src = "";
+          imagesRef.current[i] = null;
+          isLoadedRef.current[i] = false;
+        }
+      }
+    }
+  }, [loadSingleFrame]);
+
+  // Capability check, Viewport detection & High-DPI Canvas sizing
   const evaluateTierAndResizeCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
     const width = window.innerWidth;
-    const isMobile = width <= 768;
-    const isTablet = width > 768 && width <= 1024;
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    prefersReducedMotionRef.current = prefersReduced;
+    const mobile = width < 768;
+    const tablet = width >= 768 && width < 1024;
 
-    const currentTier: PerformanceTier = isMobile ? "LOW" : isTablet ? "MEDIUM" : "HIGH";
+    setIsMobile(mobile);
+    isMobileRef.current = mobile;
+
+    const currentTier: PerformanceTier = mobile ? "LOW" : tablet ? "MEDIUM" : "HIGH";
     tierRef.current = currentTier;
     setTier(currentTier);
 
-    // Intelligent devicePixelRatio: Clamped to 1.0 on mobile to eliminate 80% of fill-rate strain
-    // Capped at 1.75 on desktop for optimal sharpness on Retina / 4K displays
-    const maxDpr = currentTier === "LOW" ? 1.0 : currentTier === "MEDIUM" ? 1.25 : 1.75;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Mobile optimization: Lock DPR to 1.0 on mobile to cut 89% fill-rate strain and prevent GPU throttle.
+    // Desktop: Cap DPR at 1.75 for retina sharpness.
+    const maxDpr = mobile ? 1.0 : tablet ? 1.25 : 1.75;
     const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
 
     const displayW = window.innerWidth;
@@ -176,15 +264,18 @@ export function HeroScrollAnimation() {
       const ctx = canvas.getContext("2d", { alpha: false });
       if (ctx) {
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = currentTier === "LOW" ? "medium" : "high";
+        ctx.imageSmoothingQuality = mobile ? "medium" : "high";
       }
     }
 
-    // Pre-calculate full bleed cover dimensions for the 16:9 source frames
-    // 800x450 (mobile) and 1920x1080 (desktop) share identical 16:9 aspect ratio
-    const scale = Math.max(targetW / 1920, targetH / 1080);
-    const rw = 1920 * scale;
-    const rh = 1080 * scale;
+    // Source frames:
+    // Mobile / Tablet: 800x450 (16:9)
+    // Desktop: 1920x1080 (16:9)
+    const sourceW = mobile || tablet ? 800 : 1920;
+    const sourceH = mobile || tablet ? 450 : 1080;
+    const scale = Math.max(targetW / sourceW, targetH / sourceH);
+    const rw = sourceW * scale;
+    const rh = sourceH * scale;
     renderWRef.current = rw;
     renderHRef.current = rh;
     offsetXRef.current = (targetW - rw) * 0.5;
@@ -211,123 +302,37 @@ export function HeroScrollAnimation() {
     };
   }, [evaluateTierAndResizeCanvas]);
 
-  // Responsive Asset Loading:
-  // Mobile (LOW) loads dedicated 800px frames (/hero-frames-mobile/)
-  // Desktop (HIGH) loads full 1080p frames (/hero-frames/)
-  // Progressive Staging: Frame 0 loads instantly (<200ms), rest deferred until page load is complete
+  // Initial Progressive Frame Loading
   useEffect(() => {
     let isCancelled = false;
     const currentTier = tierRef.current;
 
-    const loadSingleFrame = (idx: number): Promise<void> => {
-      if (isCancelled || isLoadedRef.current[idx]) return Promise.resolve();
+    // Stage 1: Load Frame 0 immediately for instant First Paint (<80ms)
+    loadSingleFrame(0, currentTier);
 
-      return new Promise<void>((resolve) => {
-        const img = new Image();
-        img.decoding = "async";
-        img.src = getFrameUrl(idx, currentTier);
-
-        const onDone = () => {
-          if (isCancelled) return;
-          imagesRef.current[idx] = img;
-          isLoadedRef.current[idx] = true;
-          updateNearestLookup(idx);
-
-          const targetIdx = Math.round(currentProgressRef.current * (TOTAL_FRAMES - 1));
-          if (idx === 0 || targetIdx === idx) {
-            drawFrame(idx);
-          }
-          resolve();
-        };
-
-        if (img.complete && img.naturalWidth > 0) {
-          onDone();
-        } else {
-          img.onload = onDone;
-          img.onerror = () => resolve();
-        }
-      });
-    };
-
-    // Stage 1: Load Frame 0 immediately for instant First Paint (<200ms)
-    loadSingleFrame(0);
-
-    // Stage 2: Background Progressive Loading (runs after rest of page is ready)
-    const startProgressiveStreaming = () => {
+    // Stage 2: Preload initial buffer window and spaced milestone keyframes
+    const initialTimer = setTimeout(() => {
       if (isCancelled) return;
+      manageFrameBuffer(0, "down");
 
-      // Keyframes evenly spaced across the 207 frames
-      const keyframes = [15, 35, 55, 75, 95, 115, 135, 155, 175, 190, 206];
-
-      let keyframeIdx = 0;
-      const loadNextKeyframe = () => {
-        if (isCancelled) return;
-        if (keyframeIdx < keyframes.length) {
-          loadSingleFrame(keyframes[keyframeIdx]).then(() => {
-            keyframeIdx++;
-            setTimeout(loadNextKeyframe, 20);
-          });
-        } else {
-          startRemainingFrames();
-        }
-      };
-
-      const startRemainingFrames = () => {
-        if (isCancelled) return;
-        // Mobile loads every 2nd frame (104 total), Desktop loads every frame (207 total)
-        const frameStep = currentTier === "LOW" ? 2 : 1;
-        const remaining: number[] = [];
-        for (let i = 1; i < TOTAL_FRAMES; i += frameStep) {
-          if (!keyframes.includes(i)) {
-            remaining.push(i);
+      // Key milestone preloading (spaced frames so any fast scroll immediately finds a frame)
+      const milestones = [25, 50, 75, 100, 135, 170, 206];
+      milestones.forEach((idx, i) => {
+        setTimeout(() => {
+          if (!isCancelled && !isLoadedRef.current[idx] && !loadingSetRef.current.has(idx)) {
+            loadSingleFrame(idx, currentTier);
           }
-        }
-
-        let curIdx = 0;
-        const batchSize = currentTier === "LOW" ? 2 : 6;
-
-        const loadNextBatch = () => {
-          if (isCancelled || curIdx >= remaining.length) return;
-
-          const sliceEnd = Math.min(curIdx + batchSize, remaining.length);
-          const batch = remaining.slice(curIdx, sliceEnd);
-          curIdx = sliceEnd;
-
-          Promise.all(batch.map((idx) => loadSingleFrame(idx))).then(() => {
-            if (curIdx < remaining.length && !isCancelled) {
-              if ("requestIdleCallback" in window) {
-                (window as any).requestIdleCallback(loadNextBatch, { timeout: 120 });
-              } else {
-                setTimeout(loadNextBatch, currentTier === "LOW" ? 40 : 20);
-              }
-            }
-          });
-        };
-
-        loadNextBatch();
-      };
-
-      loadNextKeyframe();
-    };
-
-    let deferTimer: NodeJS.Timeout;
-    if (document.readyState === "complete") {
-      deferTimer = setTimeout(startProgressiveStreaming, 250);
-    } else {
-      const handleWindowLoad = () => {
-        window.removeEventListener("load", handleWindowLoad);
-        deferTimer = setTimeout(startProgressiveStreaming, 250);
-      };
-      window.addEventListener("load", handleWindowLoad);
-    }
+        }, 120 + i * 70);
+      });
+    }, 80);
 
     return () => {
       isCancelled = true;
-      clearTimeout(deferTimer);
+      clearTimeout(initialTimer);
     };
-  }, [getFrameUrl, drawFrame, updateNearestLookup]);
+  }, [loadSingleFrame, manageFrameBuffer]);
 
-  // Load and decode audio buffer on demand (Deferred until user interaction to keep page load featherlight)
+  // Load and decode audio buffer on demand
   const initAudio = useCallback(async () => {
     if (audioContextRef.current && isAudioLoadedRef.current) {
       if (audioContextRef.current.state === "suspended") {
@@ -386,7 +391,7 @@ export function HeroScrollAnimation() {
     }
   }, []);
 
-  // Stop current Web Audio source smoothly without clicks
+  // Stop current Web Audio source smoothly
   const stopCurrentSource = useCallback(() => {
     if (gainNodeRef.current && audioContextRef.current) {
       gainNodeRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.04);
@@ -403,7 +408,7 @@ export function HeroScrollAnimation() {
     }
   }, []);
 
-  // Precision audio scrubber: locks audio playback directly with scroll progress and direction
+  // Precision audio scrubber
   const syncAudioToScroll = useCallback((progress: number, isScrollingDown: boolean, speedMultiplier: number) => {
     if (isMutedRef.current || !isHeroVisibleRef.current) {
       stopCurrentSource();
@@ -429,23 +434,12 @@ export function HeroScrollAnimation() {
       const now = audioCtx.currentTime;
       const targetRate = Math.max(0.65, Math.min(2.0, speedMultiplier));
 
-      const currentSource = activeSourceRef.current;
-      const currentDirection = activeDirectionRef.current;
-
-      if (currentSource && currentDirection === desiredDirection) {
-        const elapsed = (now - sourceStartedAtAudioTimeRef.current) * currentPlaybackRateRef.current;
-        const currentEstimatedTime = isScrollingDown
-          ? sourceOffsetTimeRef.current + elapsed
-          : AUDIO_DURATION - (sourceOffsetTimeRef.current + elapsed);
-
-        const drift = Math.abs(targetAudioTime - currentEstimatedTime);
-
-        if (drift < 0.35) {
-          currentSource.playbackRate.setTargetAtTime(targetRate, now, 0.05);
+      if (activeSourceRef.current && activeDirectionRef.current === desiredDirection) {
+        if (Math.abs(currentPlaybackRateRef.current - targetRate) > 0.1) {
+          activeSourceRef.current.playbackRate.setTargetAtTime(targetRate, now, 0.05);
           currentPlaybackRateRef.current = targetRate;
-          gainNodeRef.current.gain.setTargetAtTime(0.85, now, 0.04);
-          return;
         }
+        return;
       }
 
       stopCurrentSource();
@@ -484,61 +478,12 @@ export function HeroScrollAnimation() {
     }
   }, [stopCurrentSource]);
 
-  // Lazy Audio unlock on initial user gesture or idle
-  useEffect(() => {
-    let idleTimer: NodeJS.Timeout;
-
-    const unlockAndInitAudio = () => {
-      clearTimeout(idleTimer);
-      initAudio();
-      removeUnlockListeners();
-    };
-
-    const unlockEvents = ["touchstart", "touchend", "pointerdown", "click", "keydown", "wheel", "scroll"];
-    const removeUnlockListeners = () => {
-      unlockEvents.forEach((evt) => window.removeEventListener(evt, unlockAndInitAudio));
-    };
-
-    unlockEvents.forEach((evt) =>
-      window.addEventListener(evt, unlockAndInitAudio, { passive: true, once: true })
-    );
-
-    idleTimer = setTimeout(() => {
-      if (document.visibilityState === "visible") {
-        initAudio();
-      }
-    }, 2500);
-
-    return () => {
-      clearTimeout(idleTimer);
-      removeUnlockListeners();
-    };
-  }, [initAudio]);
-
-  // Tab visibility handling
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.hidden) {
-        stopCurrentSource();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [stopCurrentSource]);
-
-  // Toggle mute button
-  const toggleMute = useCallback(() => {
-    initAudio();
-    setIsMuted((prev) => !prev);
-  }, [initAudio]);
-
-  // Direct DOM style updates for header and bottom cue (Bypasses React reconciliation for 60fps mobile speed)
+  // Direct DOM style updates for header and bottom cue
   const updateOverlayStyles = useCallback((progress: number) => {
     if (headerRef.current) {
-      if (progress <= 0.14) {
-        const opacity = Math.max(0, 1 - progress * 7.5);
-        const translateY = -progress * 60;
+      if (progress <= 0.18) {
+        const opacity = Math.max(0, 1 - progress * 5.5);
+        const translateY = -progress * 50;
         headerRef.current.style.opacity = String(opacity);
         headerRef.current.style.transform = `translate3d(0, ${translateY}px, 0)`;
         headerRef.current.style.pointerEvents = opacity > 0.1 ? "auto" : "none";
@@ -551,8 +496,8 @@ export function HeroScrollAnimation() {
     }
 
     if (bottomCueRef.current) {
-      if (progress >= 0.88) {
-        const opacity = Math.min(1, (progress - 0.88) * 8);
+      if (progress >= 0.85) {
+        const opacity = Math.min(1, (progress - 0.85) * 8);
         bottomCueRef.current.style.opacity = String(opacity);
         bottomCueRef.current.style.pointerEvents = opacity > 0.1 ? "auto" : "none";
         bottomCueRef.current.style.display = "block";
@@ -564,44 +509,43 @@ export function HeroScrollAnimation() {
     }
   }, []);
 
-  // ARCHITECTURE: requestAnimationFrame() with single scheduled animation update
-  // Never do heavy work directly inside scroll event!
-  // Fast scroll velocity optimization: Immediately catches up on fast scroll to prevent frame queues
+  // Scheduled animation update
+  // On mobile (<768px): Uses instant/snappy catch-up (0.45) so touch movement feels 1:1 connected with fingers
+  // On desktop: Smooth glide easing (0.18)
   const updateAnimation = useCallback(() => {
     if (!isHeroVisibleRef.current) {
       isTickingRef.current = false;
       return;
     }
 
+    const isMob = isMobileRef.current;
     const targetProgress = targetProgressRef.current;
     let currentProgress = currentProgressRef.current;
     const diff = targetProgress - currentProgress;
-    const isMobile = tierRef.current === "LOW";
 
-    // Fast scroll optimization: If swipe is rapid, jump directly to target progress
-    // Never allow a queue of old frames to accumulate!
-    if (Math.abs(diff) > 0.10) {
+    // Responsive catch-up: mobile touch needs immediate responsiveness, desktop uses smooth easing
+    const catchupFactor = isMob ? 0.45 : 0.20;
+    if (Math.abs(diff) > (isMob ? 0.06 : 0.12)) {
       currentProgress = targetProgress;
     } else {
-      // Smooth interpolation: 0.28 on mobile (instant thumb response), 0.14 on desktop (luxurious glide)
-      const lerpFactor = isMobile ? 0.28 : 0.14;
-      currentProgress += diff * lerpFactor;
+      currentProgress += diff * catchupFactor;
     }
 
     currentProgressRef.current = currentProgress;
 
-    // Render latest scroll position frame
     const frameToDraw = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1))));
+    const isScrollingDown = currentProgress >= lastScrollProgressRef.current;
+
+    manageFrameBuffer(frameToDraw, isScrollingDown ? "down" : "up");
+
     if (frameToDraw !== renderedFrameRef.current) {
       drawFrame(frameToDraw);
     }
 
-    // Direct DOM overlay update
     updateOverlayStyles(currentProgress);
 
     // Audio timeline synchronization
     const prevProgress = lastScrollProgressRef.current;
-    const isScrollingDown = currentProgress >= prevProgress;
     const deltaProgress = Math.abs(currentProgress - prevProgress);
     const now = performance.now();
     const deltaTime = Math.max(16, now - lastScrollTimeRef.current);
@@ -626,14 +570,13 @@ export function HeroScrollAnimation() {
 
     isTickingRef.current = false;
 
-    // Continue animation loop until settled
     if (Math.abs(targetProgress - currentProgress) > 0.001) {
       isTickingRef.current = true;
       rafIdRef.current = requestAnimationFrame(updateAnimation);
     }
-  }, [drawFrame, updateOverlayStyles, syncAudioToScroll, stopCurrentSource]);
+  }, [drawFrame, updateOverlayStyles, syncAudioToScroll, stopCurrentSource, manageFrameBuffer]);
 
-  // Passive Scroll Listener: ONLY computes targetProgress and schedules rAF if not already ticking
+  // Compute scroll progress through hero container
   const calculateScrollProgress = useCallback(() => {
     const container = containerRef.current;
     if (!container) return 0;
@@ -653,25 +596,24 @@ export function HeroScrollAnimation() {
     }
   }, [calculateScrollProgress, updateAnimation]);
 
-  // Main Scroll Listener: Uses passive scroll listener with single scheduled rAF
+  // Unified scroll listeners for both Mobile and Desktop
   useEffect(() => {
     const lenis = (window as any).__lenis;
-
-    if (lenis) {
+    if (lenis && !isMobile) {
       lenis.on("scroll", onScroll);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
     return () => {
-      if (lenis) {
+      if (lenis && !isMobile) {
         lenis.off("scroll", onScroll);
       }
       window.removeEventListener("scroll", onScroll);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
     };
-  }, [onScroll]);
+  }, [isMobile, onScroll]);
 
   // IntersectionObserver to pause rendering and silence audio when off-screen
   useEffect(() => {
@@ -713,100 +655,135 @@ export function HeroScrollAnimation() {
     };
   }, [stopCurrentSource]);
 
-  // Responsive scroll height: 220vh on mobile allows natural 2-swipe traverse without scroll-fatigue
-  const heroHeight = tier === "LOW" ? "220vh" : tier === "MEDIUM" ? "300vh" : "420vh";
+  // Toggle mute button
+  const toggleMute = useCallback(() => {
+    initAudio();
+    setIsMuted((prev) => !prev);
+  }, [initAudio]);
 
   return (
     <section
       ref={containerRef}
-      className="relative w-full bg-[#0c131a]"
-      style={{ height: heroHeight }}
       id="hero-section"
+      className="relative w-full bg-[#0c131a]"
+      style={{
+        /* Mobile: 220vh (~2 natural thumb swipes, perfectly balanced and never feels stuck).
+           Tablet: 300vh. Desktop: 380vh. */
+        height: isMobile ? "220vh" : tier === "MEDIUM" ? "300vh" : "380vh",
+      }}
     >
-      {/* Pinned Fullscreen Viewport - Hardware accelerated layout */}
-      <div 
-        className="sticky top-0 left-0 w-full h-screen h-[100dvh] overflow-hidden flex items-center justify-center pointer-events-none z-10"
-        style={{ transform: "translate3d(0, 0, 0)", willChange: "transform" }}
+      {/*
+        STICKY VIEWPORT — pins to top while the section scrolls underneath.
+        Height is always 100vh / 100dvh so it fills the screen completely.
+      */}
+      <div
+        className="sticky top-0 w-full overflow-hidden"
+        style={{
+          height: "100vh",
+          minHeight: "100vh",
+        }}
       >
-        {/* Hardware-Accelerated 2D Canvas Scrub */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full select-none pointer-events-none z-0"
-          style={{ 
-            backgroundColor: "#0c131a",
-            transform: "translate3d(0, 0, 0)",
-            willChange: "transform"
-          }}
-        />
-
-        {/* Minimal Initial Hero Header - Controlled via direct DOM style updates for zero lag */}
-        {/* On mobile, simplified GPU-friendly solid backdrop eliminates expensive multi-layer filter lag */}
+        {/* INNER WRAPPER */}
         <div
-          ref={headerRef}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pointer-events-none transition-none"
-          style={{ willChange: "opacity, transform" }}
+          className="absolute inset-0"
+          style={{ transform: "translate3d(0, 0, 0)", willChange: "transform" }}
         >
-          <div className="max-w-3xl text-center pointer-events-auto px-2">
-            <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] font-semibold text-cyan-300 mb-2.5 sm:mb-3 bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-cyan-500/30">
-              VY NextGen Technologies
-            </span>
+          {/* Hardware-Accelerated 2D Canvas Scrub (Both Mobile & Desktop) */}
+          <canvas
+            ref={canvasRef}
+            className="select-none pointer-events-none z-0 render-high-quality"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              backgroundColor: "#0c131a",
+              transform: "translate3d(0, 0, 0)",
+              willChange: "transform",
+            }}
+          />
 
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-3 sm:mb-4 leading-tight">
-              Architecting <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500">
-                Next-Gen Systems
+          {/* Minimal Initial Hero Header */}
+          <div
+            ref={headerRef}
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center px-4 pointer-events-none transition-none"
+            style={{ willChange: "opacity, transform" }}
+          >
+            <div className="max-w-3xl text-center pointer-events-auto px-2">
+              <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] font-semibold text-cyan-300 mb-2.5 sm:mb-3 bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg">
+                VY NextGen Technologies
               </span>
-            </h1>
 
-            <p className="text-xs sm:text-base md:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed mb-5 sm:mb-6">
-              Web Platforms • Mobile Ecosystems • Cloud GST Billing
-            </p>
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-3 sm:mb-4 leading-tight">
+                Architecting <br className="hidden sm:inline" />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500">
+                  Next-Gen Systems
+                </span>
+              </h1>
 
-            <div className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 tracking-wider uppercase bg-slate-900/90 sm:bg-slate-900/70 sm:backdrop-blur-sm px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit mx-auto border border-cyan-500/30">
-              <span>Scroll to explore</span>
-              <ChevronDown className="w-3.5 h-3.5 animate-bounce text-cyan-400" />
+              <p className="text-xs sm:text-base md:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed mb-5 sm:mb-6">
+                Web Platforms • Mobile Ecosystems • Cloud GST Billing
+              </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const target = document.getElementById("solutions") || document.querySelector("section:nth-of-type(2)");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                  } else {
+                    window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
+                  }
+                }}
+                className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 tracking-wider uppercase bg-slate-900/90 sm:bg-slate-900/70 sm:backdrop-blur-sm px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit mx-auto border border-cyan-500/30 cursor-pointer active:scale-95 transition-transform shadow-md hover:border-cyan-400 hover:text-white"
+              >
+                <span>Scroll to explore</span>
+                <ChevronDown className="w-3.5 h-3.5 animate-bounce text-cyan-400" />
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Subtle Scroll Cue at the End of the Hero Experience */}
-        <div
-          ref={bottomCueRef}
-          className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 w-full max-w-xs sm:max-w-none text-center hidden"
-          style={{ willChange: "opacity" }}
-        >
-          <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-950/90 sm:bg-slate-950/85 sm:backdrop-blur-xl border border-cyan-500/30 text-white text-[11px] sm:text-xs font-medium shadow-2xl">
-            <span>Continue scrolling to view solutions</span>
-            <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-bounce shrink-0" />
+          {/* Subtle Scroll Cue at the End of the Hero Experience */}
+          <div
+            ref={bottomCueRef}
+            className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 w-full max-w-xs sm:max-w-none text-center hidden"
+            style={{ willChange: "opacity" }}
+          >
+            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-950/90 sm:bg-slate-950/85 sm:backdrop-blur-xl border border-cyan-500/30 text-white text-[11px] sm:text-xs font-medium shadow-2xl">
+              <span>Continue scrolling to view solutions</span>
+              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-bounce shrink-0" />
+            </div>
+          </div>
+
+          {/* Sleek Audio Control Badge */}
+          <div className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 pointer-events-auto">
+            <button
+              onClick={toggleMute}
+              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+              className="group flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:min-h-0 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-[11px] sm:text-xs font-medium cursor-pointer active:scale-95 shadow-lg"
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
+                  <span className="text-slate-400 group-hover:text-slate-200">Sound: Muted</span>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-0.5 h-3.5 sm:h-4">
+                    <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.8s_ease-in-out_infinite] h-3" : "h-1.5"}`} />
+                    <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_1.2s_ease-in-out_infinite_0.2s] h-4" : "h-2"}`} />
+                    <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.9s_ease-in-out_infinite_0.4s] h-2.5" : "h-1.5"}`} />
+                  </div>
+                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
+                  <span className="hidden xs:inline sm:inline text-cyan-300">
+                    Synchronized Audio
+                  </span>
+                </>
+              )}
+            </button>
           </div>
         </div>
-
-        {/* Sleek, Unobtrusive Audio Control & Sound Wave Badge */}
-        <div className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 pointer-events-auto">
-          <button
-            onClick={toggleMute}
-            aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-            className="group flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:min-h-0 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-[11px] sm:text-xs font-medium cursor-pointer active:scale-95"
-          >
-            {isMuted ? (
-              <>
-                <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
-                <span className="text-slate-400 group-hover:text-slate-200">Sound: Muted</span>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-0.5 h-3.5 sm:h-4">
-                  <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.8s_ease-in-out_infinite] h-3" : "h-1.5"}`} />
-                  <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_1.2s_ease-in-out_infinite_0.2s] h-4" : "h-2"}`} />
-                  <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.9s_ease-in-out_infinite_0.4s] h-2.5" : "h-1.5"}`} />
-                </div>
-                <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
-                <span className="hidden xs:inline sm:inline text-cyan-300">Synchronized Audio</span>
-              </>
-            )}
-          </button>
-        </div>
-
       </div>
     </section>
   );

@@ -37,12 +37,17 @@ function PageLoadingFallback() {
 
 function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Detect touch devices (iOS & Android)
-    const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    // Detect touch devices (iOS, Android, touchscreen laptops) and mobile viewports (<768px)
+    const isTouch =
+      typeof window !== "undefined" &&
+      ("ontouchstart" in window ||
+        (navigator && navigator.maxTouchPoints > 0) ||
+        window.matchMedia("(max-width: 768px)").matches ||
+        window.matchMedia("(pointer: coarse)").matches);
 
-    // On mobile, native touch momentum scrolling is 120Hz hardware-accelerated by the OS compositor.
-    // Hijacking touch events on mobile causes WebKit/Blink to stutter and hang.
-    // On desktop, Lenis delivers the butter-smooth mousewheel glide seen on aventuradentalarts.com.
+    // On touch devices and mobile viewports, native touch momentum scrolling is 120Hz hardware-accelerated by the OS compositor.
+    // Hijacking or easing touch events on mobile causes WebKit/Blink to stutter, lag, and drop frames.
+    // Therefore, completely disable smooth scroll easing on touch/mobile devices to let native momentum handle scrolling.
     if (isTouch) {
       return;
     }
@@ -54,6 +59,8 @@ function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
       gestureOrientation: "vertical",
       smoothWheel: true,
       wheelMultiplier: 1.0,
+      touchMultiplier: 1.0,
+      syncTouch: false, // Ensure touch scrolling is never hijacked
       infinite: false,
     });
 
@@ -120,8 +127,8 @@ function Router() {
 
 function MainContent() {
   return (
-    <div className="flex flex-col min-h-screen overflow-x-hidden w-full relative max-w-[100vw]">
-      <main className="flex-grow overflow-x-hidden w-full">
+    <div className="flex flex-col min-h-screen overflow-x-clip w-full relative max-w-[100vw]">
+      <main className="flex-grow overflow-x-clip w-full">
         <Router />
       </main>
       <Footer />

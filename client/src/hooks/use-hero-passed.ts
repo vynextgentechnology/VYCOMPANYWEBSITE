@@ -20,10 +20,10 @@ export function useIsPastHero() {
       const heroEl = document.getElementById("hero-section");
       if (heroEl) {
         const rect = heroEl.getBoundingClientRect();
-        // Visible once the hero container has scrolled through and the user reaches the rest of the website
-        setIsPastHero(rect.bottom <= window.innerHeight * 1.15);
+        // Reveal navigation when reaching the end of the hero scrub
+        setIsPastHero(rect.bottom <= window.innerHeight * 1.05);
       } else {
-        setIsPastHero(window.scrollY > 1500);
+        setIsPastHero(window.scrollY > (window.innerWidth < 768 ? 200 : 1500));
       }
     };
 
