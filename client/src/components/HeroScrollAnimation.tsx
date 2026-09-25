@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown, Volume2, VolumeX } from "lucide-react";
 
-const TOTAL_FRAMES = 300;
+const TOTAL_FRAMES = 207;
 const DESKTOP_FRAME_PREFIX = "/hero-frames/ezgif-frame-";
 const MOBILE_FRAME_PREFIX = "/hero-frames-mobile/ezgif-frame-";
 const FRAME_EXT = ".jpg";
@@ -150,8 +150,8 @@ export function HeroScrollAnimation() {
     setTier(currentTier);
 
     // Intelligent devicePixelRatio: Clamped to 1.0 on mobile to eliminate 80% of fill-rate strain
-    // Capped at 1.5 on desktop for optimal sharpness
-    const maxDpr = currentTier === "LOW" ? 1.0 : currentTier === "MEDIUM" ? 1.25 : 1.5;
+    // Capped at 1.75 on desktop for optimal sharpness on Retina / 4K displays
+    const maxDpr = currentTier === "LOW" ? 1.0 : currentTier === "MEDIUM" ? 1.25 : 1.75;
     const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
 
     const displayW = window.innerWidth;
@@ -248,8 +248,8 @@ export function HeroScrollAnimation() {
     const startProgressiveStreaming = () => {
       if (isCancelled) return;
 
-      // Keyframes evenly spaced across the 300 frames
-      const keyframes = [15, 30, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 299];
+      // Keyframes evenly spaced across the 207 frames
+      const keyframes = [15, 35, 55, 75, 95, 115, 135, 155, 175, 190, 206];
 
       let keyframeIdx = 0;
       const loadNextKeyframe = () => {
@@ -266,7 +266,7 @@ export function HeroScrollAnimation() {
 
       const startRemainingFrames = () => {
         if (isCancelled) return;
-        // Mobile loads every 2nd frame (150 total), Desktop loads every frame (300 total)
+        // Mobile loads every 2nd frame (104 total), Desktop loads every frame (207 total)
         const frameStep = currentTier === "LOW" ? 2 : 1;
         const remaining: number[] = [];
         for (let i = 1; i < TOTAL_FRAMES; i += frameStep) {
