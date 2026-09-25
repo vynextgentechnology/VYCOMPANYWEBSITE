@@ -2,8 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown, Volume2, VolumeX } from "lucide-react";
 
 const TOTAL_FRAMES = 207;
-const DESKTOP_FRAME_PREFIX = "/hero-frames/ezgif-frame-";
-const MOBILE_FRAME_PREFIX = "/hero-frames-mobile/ezgif-frame-";
+const FRAME_PREFIX = "/hero-frames/ezgif-frame-";
 const FRAME_EXT = ".jpg";
 const AUDIO_URL = "/audio/hero-audio.mp3";
 const AUDIO_DURATION = 10.762;
@@ -87,13 +86,10 @@ export function HeroScrollAnimation() {
     }
   }, [isMuted]);
 
-  // Determine current frame URL based on device capability tier:
-  // LOW (<768px) and MEDIUM (768-1023px): lightweight 800px frames (/hero-frames-mobile/)
-  // HIGH (>=1024px): full 1920x1080 frames (/hero-frames/)
-  const getFrameUrl = useCallback((index: number, currentTier: PerformanceTier) => {
+  // Full 1080p source frames for razor-sharp visual clarity across all devices
+  const getFrameUrl = useCallback((index: number) => {
     const frameNumber = String(index + 1).padStart(3, "0");
-    const prefix = currentTier === "HIGH" ? DESKTOP_FRAME_PREFIX : MOBILE_FRAME_PREFIX;
-    return `${prefix}${frameNumber}${FRAME_EXT}`;
+    return `${FRAME_PREFIX}${frameNumber}${FRAME_EXT}`;
   }, []);
 
   // Update nearest loaded frame lookup table whenever a frame finishes loading
@@ -141,7 +137,7 @@ export function HeroScrollAnimation() {
   }, []);
 
   // Load a single frame asynchronously
-  const loadSingleFrame = useCallback((idx: number, currentTier: PerformanceTier): Promise<void> => {
+  const loadSingleFrame = useCallback((idx: number): Promise<void> => {
     if (idx < 0 || idx >= TOTAL_FRAMES) return Promise.resolve();
     if (isLoadedRef.current[idx] && imagesRef.current[idx]) return Promise.resolve();
     if (loadingSetRef.current.has(idx)) return Promise.resolve();
@@ -151,7 +147,7 @@ export function HeroScrollAnimation() {
     return new Promise<void>((resolve) => {
       const img = new Image();
       img.decoding = "async";
-      img.src = getFrameUrl(idx, currentTier);
+      img.src = getFrameUrl(idx);
 
       const onDone = () => {
         loadingSetRef.current.delete(idx);
@@ -183,7 +179,6 @@ export function HeroScrollAnimation() {
   // On desktop: loads all frames in buffer window
   const manageFrameBuffer = useCallback((centerIdx: number, direction: "down" | "up" = "down") => {
     const isMob = isMobileRef.current;
-    const currentTier = tierRef.current;
     const bufAhead = isMob ? 8 : 14;
     const bufBehind = isMob ? 4 : 8;
     const evictDist = isMob ? 18 : 26;
@@ -204,13 +199,13 @@ export function HeroScrollAnimation() {
 
     // Preserve frame 0 as root fallback anchor
     if (!isLoadedRef.current[0] && !loadingSetRef.current.has(0)) {
-      loadSingleFrame(0, currentTier);
+      loadSingleFrame(0);
     }
 
     // Dispatch asynchronous fetch for unbuffered frames
     for (const idx of framesToLoad) {
       if (!isLoadedRef.current[idx] && !loadingSetRef.current.has(idx)) {
-        loadSingleFrame(idx, currentTier);
+        loadSingleFrame(idx);
       }
     }
 
@@ -245,10 +240,8 @@ export function HeroScrollAnimation() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Mobile optimization: Lock DPR to 1.0 on mobile to cut 89% fill-rate strain and prevent GPU throttle.
-    // Desktop: Cap DPR at 1.75 for retina sharpness.
-    const maxDpr = mobile ? 1.0 : tablet ? 1.25 : 1.75;
-    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+    // High-Resolution Retina display support: up to 2.0x DPR so pixels never drop or blur on mobile
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
 
     const displayW = window.innerWidth;
     const displayH = window.innerHeight;
@@ -264,15 +257,13 @@ export function HeroScrollAnimation() {
       const ctx = canvas.getContext("2d", { alpha: false });
       if (ctx) {
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = mobile ? "medium" : "high";
+        ctx.imageSmoothingQuality = "high";
       }
     }
 
-    // Source frames:
-    // Mobile / Tablet: 800x450 (16:9)
-    // Desktop: 1920x1080 (16:9)
-    const sourceW = mobile || tablet ? 800 : 1920;
-    const sourceH = mobile || tablet ? 450 : 1080;
+    // Source frames are full 1920x1080 (16:9) crisp master renders
+    const sourceW = 1920;
+    const sourceH = 1080;
     const scale = Math.max(targetW / sourceW, targetH / sourceH);
     const rw = sourceW * scale;
     const rh = sourceH * scale;
@@ -305,10 +296,9 @@ export function HeroScrollAnimation() {
   // Initial Progressive Frame Loading
   useEffect(() => {
     let isCancelled = false;
-    const currentTier = tierRef.current;
 
     // Stage 1: Load Frame 0 immediately for instant First Paint (<80ms)
-    loadSingleFrame(0, currentTier);
+    loadSingleFrame(0);
 
     // Stage 2: Preload initial buffer window and spaced milestone keyframes
     const initialTimer = setTimeout(() => {
@@ -320,7 +310,7 @@ export function HeroScrollAnimation() {
       milestones.forEach((idx, i) => {
         setTimeout(() => {
           if (!isCancelled && !isLoadedRef.current[idx] && !loadingSetRef.current.has(idx)) {
-            loadSingleFrame(idx, currentTier);
+            loadSingleFrame(idx);
           }
         }, 120 + i * 70);
       });
