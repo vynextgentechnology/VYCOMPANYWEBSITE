@@ -26,10 +26,10 @@ const buttonVariants = cva(
       // inside buttons. With a min-height they will look appropriate with small amounts of content,
       // but will expand to fit large amounts of content.
       size: {
-        default: "min-h-9 px-4 py-2",
-        sm: "min-h-8 rounded-md px-3 text-xs",
-        lg: "min-h-10 rounded-md px-8",
-        icon: "h-9 w-9",
+        default: "min-h-[48px] sm:min-h-10 px-5 py-2.5 text-sm font-semibold rounded-xl",
+        sm: "min-h-[42px] sm:min-h-8 rounded-lg px-3.5 text-xs font-semibold",
+        lg: "min-h-[52px] sm:min-h-12 rounded-xl px-8 text-sm sm:text-base font-bold",
+        icon: "min-h-[48px] min-w-[48px] sm:min-h-9 sm:min-w-9 h-12 w-12 sm:h-9 sm:w-9 rounded-xl",
       },
     },
     defaultVariants: {

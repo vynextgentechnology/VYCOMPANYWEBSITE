@@ -32,6 +32,8 @@ export function Footer() {
                 <img
                   src={logoImg}
                   alt="VY NextGen Technologies Logo"
+                  loading="lazy"
+                  decoding="async"
                   className="h-full w-auto object-contain"
                 />
               </div>

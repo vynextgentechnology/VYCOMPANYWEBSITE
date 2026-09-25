@@ -162,8 +162,8 @@ export default function BillingSoftware() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#request-demo">
-                  <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5">
+                <a href="#request-demo" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 min-h-[48px] bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30 transition-all hover:-translate-y-0.5">
                     Request Free Demo <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </a>
@@ -171,8 +171,9 @@ export default function BillingSoftware() {
                   href="https://wa.me/918754020556?text=Hello%20VY%20NextGen%20Technology,%20I%20would%20like%20to%20see%20a%20demo%20of%20your%20Billing%20Software."
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
                 >
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 border-emerald-500/50 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-900/40 font-bold">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 min-h-[48px] border-emerald-500/50 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-900/40 font-bold">
                     <FaWhatsapp className="mr-2 w-5 h-5 text-emerald-400" /> WhatsApp Quick Demo
                   </Button>
                 </a>
@@ -185,7 +186,7 @@ export default function BillingSoftware() {
       {/* Trust Counters */}
       <section className="bg-white border-y border-slate-200 py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
             <div>
               <p className="text-3xl lg:text-4xl font-black text-blue-600">&lt; 3 Sec</p>
               <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Average Bill Checkout</p>
@@ -215,7 +216,7 @@ export default function BillingSoftware() {
             <p className="text-slate-600 mt-3">From neighborhood supermarkets to large distribution warehouses, our billing software adapts to your exact business workflow.</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {businessTypes.map((biz, idx) => (
               <motion.div
                 key={idx}
@@ -243,7 +244,7 @@ export default function BillingSoftware() {
             <p className="text-slate-600 mt-3">Packed with high-performance features designed to eliminate calculation mistakes and stop inventory leakages.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {features.map((feat, idx) => (
               <div key={idx} className="p-6 rounded-2xl bg-slate-50 border border-slate-200/70 hover:bg-white hover:border-blue-200 hover:shadow-lg transition-all duration-300">
                 <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center mb-4 border border-slate-200">
@@ -439,14 +440,14 @@ export default function BillingSoftware() {
                     <Button
                       type="submit"
                       disabled={orderMutation.isPending}
-                      className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-lg shadow-blue-500/30"
+                      className="flex-1 h-12 min-h-[48px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-lg shadow-blue-500/30"
                     >
                       {orderMutation.isPending ? "Submitting..." : "Schedule Free Live Demo"}
                       <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                     <a
                       href="tel:+918754020556"
-                      className="flex items-center justify-center gap-2 px-6 h-12 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-sm font-semibold"
+                      className="flex items-center justify-center gap-2 px-6 h-12 min-h-[48px] rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-sm font-semibold"
                     >
                       <PhoneCall className="w-4 h-4 text-cyan-400" />
                       <span>Call Us Directly</span>

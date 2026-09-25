@@ -211,7 +211,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {services.map((service, idx) => (
               <motion.div
                 key={service.title}
@@ -250,7 +250,7 @@ export default function Home() {
                 </div>
 
                 <Link href={service.href}>
-                  <Button variant="ghost" className="w-full justify-between px-0 text-cyan-400 font-bold hover:bg-transparent hover:text-cyan-300 group/btn">
+                  <Button variant="ghost" className="w-full min-h-[48px] justify-between px-0 text-cyan-400 font-bold hover:bg-transparent hover:text-cyan-300 group/btn">
                     <span>Explore & Get Started</span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                   </Button>
@@ -278,7 +278,7 @@ export default function Home() {
           </div>
 
           <div className="max-w-4xl mx-auto bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl">
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               
               {/* Controls (2 cols) */}
               <div className="md:col-span-2 space-y-6">
@@ -297,7 +297,7 @@ export default function Home() {
                       <button
                         key={item.id}
                         onClick={() => setCalcService(item.id as any)}
-                        className={`p-3 sm:p-3.5 rounded-xl text-left border transition-all flex items-center gap-3 cursor-pointer ${
+                        className={`p-3 sm:p-3.5 min-h-[48px] rounded-xl text-left border transition-all flex items-center gap-3 cursor-pointer ${
                           calcService === item.id
                             ? "bg-cyan-500/20 border-cyan-400 text-white ring-1 ring-cyan-400"
                             : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white"
@@ -324,7 +324,7 @@ export default function Home() {
                       <button
                         key={item.id}
                         onClick={() => setCalcScale(item.id as any)}
-                        className={`p-3 rounded-xl text-center border transition-all cursor-pointer ${
+                        className={`p-3 min-h-[48px] rounded-xl text-center border transition-all cursor-pointer ${
                           calcScale === item.id
                             ? "bg-cyan-500/20 border-cyan-400 text-white ring-1 ring-cyan-400"
                             : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white"
@@ -345,7 +345,7 @@ export default function Home() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                     <button
                       onClick={() => setCalcTimeline("standard")}
-                      className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                      className={`p-3 min-h-[48px] rounded-xl border text-center transition-all cursor-pointer ${
                         calcTimeline === "standard"
                           ? "bg-cyan-500/20 border-cyan-400 text-white ring-1 ring-cyan-400"
                           : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white"
@@ -356,7 +356,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => setCalcTimeline("express")}
-                      className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                      className={`p-3 min-h-[48px] rounded-xl border text-center transition-all cursor-pointer ${
                         calcTimeline === "express"
                           ? "bg-cyan-500/20 border-cyan-400 text-white ring-1 ring-cyan-400"
                           : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white"
@@ -403,8 +403,8 @@ export default function Home() {
                 </div>
 
                 <div className="pt-6 space-y-3">
-                  <Link href="/web-development">
-                    <Button className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/25">
+                  <Link href="/web-development" className="block">
+                    <Button className="w-full min-h-[48px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/25">
                       Request Scope & Proposal
                     </Button>
                   </Link>
@@ -416,7 +416,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="block"
                   >
-                    <Button variant="outline" className="w-full h-10 rounded-xl border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/40 text-xs font-semibold">
+                    <Button variant="outline" className="w-full min-h-[48px] rounded-xl border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/40 text-xs font-semibold">
                       <FaWhatsapp className="mr-1.5 w-4 h-4" /> Discuss on WhatsApp
                     </Button>
                   </a>
@@ -443,14 +443,14 @@ export default function Home() {
                 Real results delivered across commercial websites, retail automation, and digital portals.
               </p>
             </div>
-            <Link href="/web-development">
-              <Button variant="outline" className="rounded-full px-6 border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white font-bold">
+            <Link href="/web-development" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto min-h-[48px] rounded-full px-6 border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800 hover:text-white font-bold">
                 Order Your Custom Project <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {portfolioItems.map((item, idx) => (
               <div key={idx} className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col justify-between hover:border-cyan-500/50 hover:shadow-cyan-950/40 transition-all duration-300">
                 <div className="p-7">
@@ -500,9 +500,9 @@ export default function Home() {
           <p className="text-slate-300 text-sm sm:text-base mb-8 max-w-xl mx-auto leading-relaxed">
             From high-speed web platforms to retail billing software and talent training, our engineering team is ready to deliver.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/enquiry">
-              <Button className="h-12 px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-xl shadow-blue-500/30 cursor-pointer">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+            <Link href="/enquiry" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto h-12 min-h-[48px] px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-xl shadow-blue-500/30 cursor-pointer">
                 <span>Contact Engineering Team</span>
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
@@ -511,8 +511,9 @@ export default function Home() {
               href="https://wa.me/918754020556"
               target="_blank"
               rel="noopener noreferrer"
+              className="w-full sm:w-auto"
             >
-              <Button variant="outline" className="h-12 px-8 rounded-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-950/40 text-sm font-semibold cursor-pointer">
+              <Button variant="outline" className="w-full sm:w-auto h-12 min-h-[48px] px-8 rounded-full border-emerald-500/50 text-emerald-400 hover:bg-emerald-950/40 text-sm font-semibold cursor-pointer">
                 <FaWhatsapp className="mr-2 w-4 h-4" /> Chat on WhatsApp
               </Button>
             </a>

@@ -469,24 +469,25 @@ export default function Careers() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="pt-4 flex flex-col items-center justify-center space-y-4"
             >
-              <div className="flex flex-wrap items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
                 <a
                   href={GOOGLE_FORM_CAREERS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
                 >
                   <Button
-                    className="rounded-full px-8 h-13 py-3.5 text-base font-bold bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 hover:from-blue-600 hover:via-cyan-600 hover:to-indigo-600 text-white shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all hover:scale-105"
+                    className="w-full sm:w-auto min-h-[48px] rounded-full px-8 h-13 py-3.5 text-base font-bold bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 hover:from-blue-600 hover:via-cyan-600 hover:to-indigo-600 text-white shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all hover:scale-105"
                   >
                     <span>Apply via Official Google Form</span>
                     <ExternalLink className="w-4 h-4 ml-2.5" />
                   </Button>
                 </a>
 
-                <a href="#vacancies">
+                <a href="#vacancies" className="w-full sm:w-auto">
                   <Button
                     variant="outline"
-                    className="rounded-full px-7 h-13 py-3.5 text-base font-semibold border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm transition-all"
+                    className="w-full sm:w-auto min-h-[48px] rounded-full px-7 h-13 py-3.5 text-base font-semibold border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm transition-all"
                   >
                     <span>View Available Jobs Below</span>
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -776,7 +777,7 @@ export default function Careers() {
                       <Button
                         variant="outline"
                         onClick={() => setActiveJobDetails(job)}
-                        className="w-full sm:w-auto rounded-xl h-11 px-5 text-xs font-bold border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
+                        className="w-full sm:w-auto min-h-[48px] rounded-xl h-11 px-5 text-xs font-bold border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
                       >
                         <span>View Role Details</span>
                         <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
@@ -805,10 +806,10 @@ export default function Careers() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
-                <a href="#top">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full md:w-auto">
+                <a href="#top" className="w-full sm:w-auto">
                   <Button
-                    className="rounded-full px-7 h-11 text-sm font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                    className="w-full sm:w-auto min-h-[48px] rounded-full px-7 h-11 text-sm font-bold bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
                   >
                     <span>Apply via Top Google Form</span>
                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -818,7 +819,7 @@ export default function Careers() {
                   href="https://wa.me/918754020556?text=Hi%20VY%20NextGen%20HR%2C%20I%20am%20interested%20in%20career%20opportunities."
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 h-11 min-h-[48px] rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-all"
                 >
                   <FaWhatsapp className="w-4 h-4" />
                   <span>WhatsApp HR</span>
@@ -1024,7 +1025,7 @@ export default function Careers() {
                   <Button
                     variant="outline"
                     onClick={() => setActiveJobDetails(null)}
-                    className="w-full sm:w-auto rounded-xl text-xs font-bold px-6"
+                    className="w-full sm:w-auto min-h-[48px] rounded-xl text-xs font-bold px-6"
                   >
                     Close
                   </Button>

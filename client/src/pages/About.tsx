@@ -263,7 +263,7 @@ export default function About() {
             <h2 className="text-3xl sm:text-4xl font-black text-white mt-2">Our Mission & Strategic Vision</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <motion.div 
               whileHover={{ y: -6, transition: { duration: 0.2 } }}
               initial={{ opacity: 0, x: -20 }}
@@ -316,7 +316,7 @@ export default function About() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {values.map((v, idx) => (
               <motion.div
                 key={idx}

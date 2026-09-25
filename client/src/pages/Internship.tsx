@@ -206,8 +206,8 @@ export default function Internship() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#apply-now">
-                  <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5">
+                <a href="#apply-now" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5">
                     Apply Now <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </a>
@@ -215,8 +215,9 @@ export default function Internship() {
                   href="https://forms.gle/skWDWMTWipZjRf8U6"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
                 >
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 border-slate-700 bg-slate-800/60 text-slate-200 hover:bg-slate-800 font-bold">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 min-h-[48px] border-slate-700 bg-slate-800/60 text-slate-200 hover:bg-slate-800 font-bold">
                     Official Google Form <ExternalLink className="ml-2 w-4 h-4 text-emerald-400" />
                   </Button>
                 </a>
@@ -229,7 +230,7 @@ export default function Internship() {
       {/* Highlights Bar */}
       <section className="bg-white border-y border-slate-200 py-6">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
             <div>
               <p className="text-3xl font-black text-emerald-600">1 Month</p>
               <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-1">Intensive Training</p>
@@ -259,7 +260,7 @@ export default function Internship() {
             <p className="text-slate-600 mt-3">We bridge the gap between college theory and professional software engineering.</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {perks.map((perk, idx) => (
               <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200">
                 <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mb-4">
@@ -342,7 +343,7 @@ export default function Internship() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Button className="rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
+                    <Button className="w-full sm:w-auto min-h-[48px] rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
                       <FaWhatsapp className="mr-2 w-5 h-5" /> Chat on WhatsApp For Fast Approval
                     </Button>
                   </a>
@@ -351,7 +352,7 @@ export default function Internship() {
             ) : (
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       control={form.control}
                       name="clientName"
@@ -389,7 +390,7 @@ export default function Internship() {
                     />
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       control={form.control}
                       name="email"
@@ -434,7 +435,7 @@ export default function Internship() {
                     />
                   </div>
 
-                  <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <FormField
                       control={form.control}
                       name="businessName"
@@ -477,7 +478,7 @@ export default function Internship() {
                     <Button
                       type="submit"
                       disabled={applyMutation.isPending}
-                      className="flex-1 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/30"
+                      className="flex-1 h-12 min-h-[48px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base shadow-lg shadow-emerald-500/30"
                     >
                       {applyMutation.isPending ? "Submitting..." : "Submit Internship Application"}
                       <ArrowRight className="ml-2 w-4 h-4" />
@@ -486,7 +487,7 @@ export default function Internship() {
                       href="https://forms.gle/skWDWMTWipZjRf8U6"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 px-6 h-12 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-sm font-semibold"
+                      className="flex items-center justify-center gap-2 px-6 h-12 min-h-[48px] rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-900 transition-colors text-sm font-semibold"
                     >
                       <span>Google Form Link</span>
                       <ExternalLink className="w-4 h-4" />

@@ -47,7 +47,13 @@ export function HeroScrollAnimation() {
   const lastScrollTimeRef = useRef<number>(0);
 
   // Sound Engine (Web Audio API with PCM Buffers for exact forward & reverse scroll matching)
-  const [isMuted, setIsMuted] = useState<boolean>(false);
+  // Default to muted on mobile devices to prevent battery drain and unexpected audio session activation
+  const [isMuted, setIsMuted] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth <= 768 || "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0);
+    }
+    return false;
+  });
   const [isAudioActive, setIsAudioActive] = useState<boolean>(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
@@ -59,7 +65,9 @@ export function HeroScrollAnimation() {
   const sourceOffsetTimeRef = useRef<number>(0);
   const currentPlaybackRateRef = useRef<number>(1);
   const scrollStopTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isMutedRef = useRef<boolean>(false);
+  const isMutedRef = useRef<boolean>(
+    typeof window !== "undefined" && (window.innerWidth <= 768 || "ontouchstart" in window || (navigator && navigator.maxTouchPoints > 0))
+  );
   const isAudioLoadedRef = useRef<boolean>(false);
 
   // Fallback HTML5 audio element
@@ -778,7 +786,7 @@ export function HeroScrollAnimation() {
           <button
             onClick={toggleMute}
             aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-            className="group flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-[11px] sm:text-xs font-medium cursor-pointer active:scale-95"
+            className="group flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:min-h-0 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-[11px] sm:text-xs font-medium cursor-pointer active:scale-95"
           >
             {isMuted ? (
               <>

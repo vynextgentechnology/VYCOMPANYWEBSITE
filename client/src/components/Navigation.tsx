@@ -41,6 +41,25 @@ export function Navigation() {
     setIsServicesOpen(false);
   }, [location]);
 
+  // Lock body scroll and listen for Escape key when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsMobileMenuOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = "";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [isMobileMenuOpen]);
+
   const serviceItems = [
     {
       title: "Web & Mobile Development",
@@ -113,10 +132,10 @@ export function Navigation() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-4 xl:gap-7">
+        <nav className="hidden md:flex items-center gap-2 lg:gap-4 xl:gap-7">
           <Link
             href="/"
-            className={`text-sm font-semibold transition-colors ${
+            className={`text-xs lg:text-sm font-semibold transition-colors py-2 ${
               isHome
                 ? "text-cyan-400 font-bold font-mono"
                 : location === "/" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-blue-600"
@@ -127,7 +146,7 @@ export function Navigation() {
 
           <Link
             href="/about"
-            className={`text-sm font-semibold transition-colors ${
+            className={`text-xs lg:text-sm font-semibold transition-colors py-2 ${
               isHome
                 ? "text-slate-300 hover:text-cyan-300"
                 : location === "/about" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-blue-600"
@@ -143,7 +162,7 @@ export function Navigation() {
             onMouseLeave={() => setIsServicesOpen(false)}
           >
             <button
-              className={`flex items-center gap-1.5 text-sm font-semibold transition-colors py-2 cursor-pointer ${
+              className={`flex items-center gap-1 text-xs lg:text-sm font-semibold transition-colors py-2 cursor-pointer ${
                 isHome
                   ? "text-slate-300 hover:text-cyan-300"
                   : location.startsWith("/web-development") || location.startsWith("/billing-software")
@@ -151,8 +170,8 @@ export function Navigation() {
                     : "text-slate-600 hover:text-blue-600"
               }`}
             >
-              <span>Services & Solutions</span>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isServicesOpen ? "rotate-180" : ""}`} />
+              <span>Services</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isServicesOpen ? "rotate-180" : ""}`} />
             </button>
 
             <AnimatePresence>
@@ -209,14 +228,14 @@ export function Navigation() {
 
           <Link
             href="/internship"
-            className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 text-xs lg:text-sm font-semibold transition-colors py-2 ${
               isHome
                 ? "text-slate-300 hover:text-emerald-400"
                 : location === "/internship" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-blue-600"
             }`}
           >
-            <GraduationCap className="w-4 h-4 text-emerald-400" />
-            <span>Tech Internship</span>
+            <GraduationCap className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Internship</span>
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -225,15 +244,15 @@ export function Navigation() {
 
           <Link
             href="/careers"
-            className={`flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 text-xs lg:text-sm font-semibold transition-colors py-2 ${
               isHome
                 ? "text-slate-300 hover:text-cyan-300"
                 : location === "/careers" ? "text-blue-600 font-bold" : "text-slate-600 hover:text-blue-600"
             }`}
           >
-            <Briefcase className="w-4 h-4 text-cyan-400" />
+            <Briefcase className="w-3.5 h-3.5 text-cyan-400" />
             <span>Careers</span>
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
               isHome ? "bg-cyan-950 text-cyan-300 border border-cyan-500/30" : "bg-blue-100 text-blue-700"
             }`}>
               Hiring
@@ -242,7 +261,7 @@ export function Navigation() {
 
           <Link
             href="/enquiry"
-            className={`text-sm font-semibold transition-colors ${
+            className={`text-xs lg:text-sm font-semibold transition-colors py-2 ${
               isHome ? "text-slate-300 hover:text-cyan-300" : "text-slate-600 hover:text-blue-600"
             }`}
           >
@@ -252,142 +271,226 @@ export function Navigation() {
         </nav>
 
         {/* Right Action CTAs */}
-        <div className="hidden lg:flex items-center gap-3 xl:gap-4">
+        <div className="hidden md:flex items-center gap-2 xl:gap-4">
           <Link href="/enquiry">
-            <button className={`rounded-xl px-4 xl:px-5 h-9 xl:h-10 text-xs xl:text-sm font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            <button className={`rounded-xl px-3.5 xl:px-5 h-9 xl:h-10 text-xs xl:text-sm font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               isHome
                 ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
                 : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/25"
             }`}>
               <span>[ ENQUIRE NOW ]</span>
-              <ArrowRight className="w-4 h-4 ml-0.5" />
+              <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
             </button>
           </Link>
         </div>
 
-        {/* Mobile Hamburger Button */}
+        {/* Mobile Hamburger Button with 48px Touch Target */}
         <button
-          className={`lg:hidden p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors active:scale-95 cursor-pointer ${
+          className={`md:hidden p-3 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl transition-colors active:scale-95 cursor-pointer ${
             isHome ? "text-slate-200 hover:bg-slate-900" : "text-slate-700 hover:bg-slate-100"
           }`}
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle Navigation Menu"
+          aria-expanded={isMobileMenuOpen}
         >
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Full-Viewport Dismissible Mobile Overlay & Drawer */}
       <AnimatePresence>
         {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className={`lg:hidden overflow-hidden shadow-2xl ${
-              isHome 
-                ? "bg-slate-950/95 backdrop-blur-2xl border-b border-cyan-500/30 text-white" 
-                : "bg-white/95 backdrop-blur-xl border-b border-slate-200 text-slate-900"
-            }`}
-          >
-            <div className="container mx-auto px-6 py-6 space-y-4">
-              <Link
-                href="/"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-base font-bold py-1 ${isHome ? "text-cyan-400 font-mono" : "text-slate-800 hover:text-blue-600"}`}
-              >
-                Home
-              </Link>
-              <Link
-                href="/about"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-base font-bold py-1 ${isHome ? "text-slate-200 hover:text-cyan-400" : "text-slate-800 hover:text-blue-600"}`}
-              >
-                About Us & Leadership
-              </Link>
-              
-              <div className="pt-2 pb-1">
-                <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isHome ? "text-cyan-400/70 font-mono" : "text-slate-400"}`}>
-                  Solutions & Services
-                </p>
-                <div className={`space-y-2 pl-2 border-l-2 ${isHome ? "border-cyan-500/40" : "border-blue-500/30"}`}>
-                  <Link
-                    href="/web-development"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-2 text-sm font-semibold py-1.5 ${isHome ? "text-slate-300 hover:text-cyan-300" : "text-slate-700 hover:text-blue-600"}`}
-                  >
-                    <Code2 className="w-4 h-4 text-cyan-400" />
-                    <span>Web & App Development</span>
-                  </Link>
-                  <Link
-                    href="/billing-software"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-2 text-sm font-semibold py-1.5 ${isHome ? "text-slate-300 hover:text-amber-300" : "text-slate-700 hover:text-blue-600"}`}
-                  >
-                    <Receipt className="w-4 h-4 text-amber-400" />
-                    <span>Billing & GST Software</span>
-                  </Link>
-                  <Link
-                    href="/web-development"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={`flex items-center gap-2 text-sm font-semibold py-1.5 ${isHome ? "text-slate-300 hover:text-emerald-300" : "text-slate-700 hover:text-blue-600"}`}
-                  >
-                    <Layers className="w-4 h-4 text-emerald-400" />
-                    <span>UI/UX & Product Design</span>
-                  </Link>
+          <div className="fixed inset-0 z-50 md:hidden">
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+              aria-hidden="true"
+            />
+
+            {/* Slide-in Mobile Drawer */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className={`absolute top-0 right-0 bottom-0 w-full max-w-sm flex flex-col shadow-2xl overflow-hidden ${
+                isHome 
+                  ? "bg-slate-950 border-l border-cyan-500/30 text-white" 
+                  : "bg-white border-l border-slate-200 text-slate-900"
+              }`}
+            >
+              {/* Drawer Top Header with Brand & Close Button */}
+              <div className={`p-4 flex items-center justify-between border-b ${
+                isHome ? "border-slate-800 bg-slate-900/60" : "border-slate-100 bg-slate-50"
+              }`}>
+                <div className="flex items-center gap-2.5">
+                  <div className={`h-9 px-2 py-0.5 rounded-lg flex items-center justify-center ${
+                    isHome ? "bg-slate-900 border border-cyan-500/40" : "bg-[#041d57] border border-blue-900/30"
+                  }`}>
+                    <img src={logoImg} alt="VY NextGen Logo" className="h-6 w-auto object-contain" />
+                  </div>
+                  <div>
+                    <span className={`text-sm font-black tracking-tight block ${isHome ? "text-white" : "text-slate-900"}`}>
+                      VY NEXTGEN
+                    </span>
+                    <span className={`text-[9px] font-bold font-mono tracking-wider uppercase block ${isHome ? "text-cyan-400" : "text-blue-600"}`}>
+                      TECHNOLOGIES
+                    </span>
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`p-3 min-w-[48px] min-h-[48px] rounded-xl flex items-center justify-center transition-colors active:scale-95 cursor-pointer ${
+                    isHome 
+                      ? "text-slate-300 hover:text-white bg-slate-900 border border-slate-800" 
+                      : "text-slate-600 hover:text-slate-900 bg-slate-100 border border-slate-200"
+                  }`}
+                  aria-label="Close navigation menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <Link
-                href="/internship"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center justify-between text-base font-bold py-1 ${isHome ? "text-slate-200 hover:text-emerald-400" : "text-slate-800 hover:text-blue-600"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-emerald-400" />
-                  <span>Tech Internship Program</span>
+              {/* Scrollable Menu Items */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+                <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center min-h-[48px] px-3.5 py-2.5 rounded-xl text-base font-bold transition-colors ${
+                    isHome ? "text-cyan-400 bg-slate-900/70 border border-cyan-500/30 font-mono" : "text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  Home
+                </Link>
+
+                <Link
+                  href="/about"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center min-h-[48px] px-3.5 py-2.5 rounded-xl text-base font-bold transition-colors ${
+                    isHome ? "text-slate-200 hover:text-cyan-400 hover:bg-slate-900/50" : "text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  About Us & Leadership
+                </Link>
+                
+                {/* Services Group */}
+                <div className="pt-2 pb-1">
+                  <p className={`text-xs font-bold uppercase tracking-wider px-3.5 mb-2 ${isHome ? "text-cyan-400/80 font-mono" : "text-slate-400"}`}>
+                    Solutions & Services
+                  </p>
+                  <div className={`space-y-1.5 pl-2 border-l-2 ml-3.5 ${isHome ? "border-cyan-500/40" : "border-blue-500/30"}`}>
+                    <Link
+                      href="/web-development"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-2.5 min-h-[48px] px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                        isHome ? "text-slate-200 hover:text-cyan-300 hover:bg-slate-900/50" : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                      <span>Web & App Development</span>
+                    </Link>
+                    <Link
+                      href="/billing-software"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-2.5 min-h-[48px] px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                        isHome ? "text-slate-200 hover:text-amber-300 hover:bg-slate-900/50" : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <Receipt className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Billing & GST Software</span>
+                    </Link>
+                    <Link
+                      href="/web-development"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-2.5 min-h-[48px] px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                        isHome ? "text-slate-200 hover:text-emerald-300 hover:bg-slate-900/50" : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <Layers className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>UI/UX & Product Design</span>
+                    </Link>
+                  </div>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isHome ? "bg-emerald-950 text-emerald-300 border border-emerald-500/40" : "bg-emerald-100 text-emerald-700"}`}>
-                  Enroll Now
-                </span>
-              </Link>
 
-              <Link
-                href="/careers"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center justify-between text-base font-bold py-1 ${isHome ? "text-slate-200 hover:text-cyan-400" : "text-slate-800 hover:text-blue-600"}`}
-              >
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-cyan-400" />
-                  <span>Careers & Job Openings</span>
-                </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isHome ? "bg-cyan-950 text-cyan-300 border border-cyan-500/40" : "bg-blue-100 text-blue-700"}`}>
-                  We're Hiring
-                </span>
-              </Link>
+                <Link
+                  href="/internship"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center justify-between min-h-[48px] px-3.5 py-2.5 rounded-xl text-base font-bold transition-colors ${
+                    isHome ? "text-slate-200 hover:text-emerald-400 hover:bg-slate-900/50" : "text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <GraduationCap className="w-5 h-5 text-emerald-400" />
+                    <span>Tech Internship</span>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    isHome ? "bg-emerald-950 text-emerald-300 border border-emerald-500/40" : "bg-emerald-100 text-emerald-700"
+                  }`}>
+                    Enroll Now
+                  </span>
+                </Link>
 
-              <Link
-                href="/enquiry"
-                className={`block text-base font-bold py-1 ${isHome ? "text-slate-200 hover:text-cyan-400" : "text-slate-800 hover:text-blue-600"}`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Contact Us
-              </Link>
+                <Link
+                  href="/careers"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center justify-between min-h-[48px] px-3.5 py-2.5 rounded-xl text-base font-bold transition-colors ${
+                    isHome ? "text-slate-200 hover:text-cyan-400 hover:bg-slate-900/50" : "text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Briefcase className="w-5 h-5 text-cyan-400" />
+                    <span>Careers & Jobs</span>
+                  </div>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    isHome ? "bg-cyan-950 text-cyan-300 border border-cyan-500/40" : "bg-blue-100 text-blue-700"
+                  }`}>
+                    Hiring
+                  </span>
+                </Link>
 
-              <div className={`pt-4 border-t ${isHome ? "border-slate-800" : "border-slate-100"} flex flex-col gap-3`}>
+                <Link
+                  href="/enquiry"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`flex items-center min-h-[48px] px-3.5 py-2.5 rounded-xl text-base font-bold transition-colors ${
+                    isHome ? "text-slate-200 hover:text-cyan-400 hover:bg-slate-900/50" : "text-slate-800 hover:bg-slate-100"
+                  }`}
+                >
+                  Contact Us
+                </Link>
+              </div>
+
+              {/* Bottom Sticky Action CTAs with Safe Area Padding */}
+              <div className={`p-4 border-t ${
+                isHome ? "border-slate-800 bg-slate-950" : "border-slate-100 bg-white"
+              } pb-safe space-y-2.5`}>
                 <Link href="/enquiry" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className={`w-full rounded-xl h-11 font-mono font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                  <button className={`w-full min-h-[48px] rounded-xl font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     isHome 
                       ? "bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
                       : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
                   }`}>
-                    [ SUBMIT PROJECT ENQUIRY ]
+                    <span>[ SUBMIT PROJECT ENQUIRY ]</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </Link>
+
+                <a
+                  href="https://wa.me/918754020556"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 min-h-[48px] w-full rounded-xl border border-emerald-500/40 text-emerald-400 hover:bg-emerald-950/30 text-xs font-semibold"
+                >
+                  <span>Chat on WhatsApp: +91 87540 20556</span>
+                </a>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
         </motion.header>

@@ -120,8 +120,8 @@ function Router() {
 
 function MainContent() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-grow">
+    <div className="flex flex-col min-h-screen overflow-x-hidden w-full relative max-w-[100vw]">
+      <main className="flex-grow overflow-x-hidden w-full">
         <Router />
       </main>
       <Footer />

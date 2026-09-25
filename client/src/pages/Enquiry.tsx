@@ -227,18 +227,18 @@ export default function Enquiry() {
 
                 <div className="pt-8 border-t border-slate-800">
                   <p className="text-xs font-semibold text-slate-400 mb-3">Connect on Social Channels</p>
-                  <div className="flex gap-3">
-                    <a href="https://wa.me/918754020556" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                      <FaWhatsapp size={16} />
+                  <div className="flex flex-wrap gap-3">
+                    <a href="https://wa.me/918754020556" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-slate-800 hover:bg-emerald-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                      <FaWhatsapp size={18} />
                     </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                      <Linkedin size={16} />
+                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-slate-800 hover:bg-blue-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                      <Linkedin size={18} />
                     </a>
-                    <a href="https://www.instagram.com/vynextgentechnology?igsi=dnEycjhyMGIxcnU4" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-pink-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                      <Instagram size={16} />
+                    <a href="https://www.instagram.com/vynextgentechnology?igsi=dnEycjhyMGIxcnU4" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-slate-800 hover:bg-pink-600 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                      <Instagram size={18} />
                     </a>
-                    <a href="https://www.facebook.com/people/Vynextgentechnology/61593831857829/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-9 h-9 rounded-lg bg-slate-800 hover:bg-blue-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
-                      <Facebook size={16} />
+                    <a href="https://www.facebook.com/people/Vynextgentechnology/61593831857829/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl bg-slate-800 hover:bg-blue-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors">
+                      <Facebook size={18} />
                     </a>
                   </div>
                 </div>
@@ -250,7 +250,7 @@ export default function Enquiry() {
                 
                 <Form {...contactForm}>
                   <form onSubmit={contactForm.handleSubmit(onContactSubmit)} className="space-y-5">
-                    <div className="grid sm:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                       <FormField
                         control={contactForm.control}
                         name="name"
@@ -330,7 +330,7 @@ export default function Enquiry() {
                       <Button
                         type="submit"
                         disabled={contactMutation.isPending}
-                        className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/30 cursor-pointer"
+                        className="flex-1 h-12 min-h-[48px] rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/30 cursor-pointer"
                       >
                         {contactMutation.isPending ? "Submitting Inquiry..." : "Submit Inquiry"}
                         {!contactMutation.isPending && <Send className="ml-2 w-4 h-4" />}
@@ -345,7 +345,7 @@ export default function Enquiry() {
                         <Button
                           type="button"
                           variant="outline"
-                          className="w-full h-11 rounded-xl border-emerald-500/50 text-emerald-400 hover:bg-emerald-950/40 text-sm font-semibold cursor-pointer"
+                          className="w-full h-12 min-h-[48px] rounded-xl border-emerald-500/50 text-emerald-400 hover:bg-emerald-950/40 text-sm font-semibold cursor-pointer"
                         >
                           <FaWhatsapp className="mr-2 w-4 h-4" /> Quick WhatsApp
                         </Button>
@@ -419,7 +419,7 @@ export default function Enquiry() {
                   ) : (
                     <Form {...orderForm}>
                       <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-6">
-                        <div className="grid sm:grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                           <FormField
                             control={orderForm.control}
                             name="businessName"
@@ -449,7 +449,7 @@ export default function Enquiry() {
                           />
                         </div>
 
-                        <div className="grid sm:grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                           <FormField
                             control={orderForm.control}
                             name="email"
@@ -479,7 +479,7 @@ export default function Enquiry() {
                           />
                         </div>
 
-                        <div className="grid sm:grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                           <FormField
                             control={orderForm.control}
                             name="websiteType"
@@ -529,7 +529,7 @@ export default function Enquiry() {
                           />
                         </div>
 
-                        <div className="grid sm:grid-cols-3 gap-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
                           <FormField
                             control={orderForm.control}
                             name="district"
@@ -596,7 +596,7 @@ export default function Enquiry() {
                         <Button
                           type="submit"
                           disabled={orderMutation.isPending}
-                          className="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/30 cursor-pointer"
+                          className="w-full sm:w-auto h-12 min-h-[48px] px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-500/30 cursor-pointer"
                         >
                           {orderMutation.isPending ? "Submitting Scope..." : "Confirm & Submit Project Scope"}
                           {!orderMutation.isPending && <ArrowRight className="ml-2 w-4 h-4" />}
@@ -610,7 +610,7 @@ export default function Enquiry() {
           </div>
 
           {/* Quick Support strip */}
-          <div className="mt-10 grid sm:grid-cols-3 gap-4">
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
                 <Phone className="w-5 h-5" />

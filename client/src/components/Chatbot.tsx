@@ -721,6 +721,8 @@ _Sent directly via VY NextGen Website Assistant_`;
                                 <img
                                   src={leader.photo}
                                   alt={leader.name}
+                                  loading="lazy"
+                                  decoding="async"
                                   className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover object-top border-2 border-cyan-400/60 shadow-md shadow-cyan-500/30 group-hover:scale-105 transition-transform duration-200"
                                 />
                               </div>

@@ -195,13 +195,13 @@ export default function WebDevelopment() {
             <p className="text-slate-600 mt-3">Choose a foundational package structure or customize your project scope in the form below.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {packages.map((pkg, idx) => (
               <div
                 key={idx}
-                className={`rounded-3xl p-8 border flex flex-col justify-between transition-all duration-200 ${
+                className={`rounded-3xl p-6 sm:p-8 border flex flex-col justify-between transition-all duration-200 ${
                   pkg.popular
-                    ? "bg-slate-900 text-white border-blue-500 shadow-2xl relative scale-105"
+                    ? "bg-slate-900 text-white border-blue-500 shadow-2xl relative md:scale-105"
                     : "bg-slate-50 text-slate-900 border-slate-200 shadow-sm hover:shadow-md"
                 }`}
               >
@@ -260,7 +260,7 @@ export default function WebDevelopment() {
             <h2 className="text-3xl lg:text-4xl font-black text-slate-900 mt-2">How We Bring Your Idea To Life</h2>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
             {steps.map((step, idx) => (
               <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div>
