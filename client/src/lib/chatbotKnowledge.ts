@@ -161,549 +161,79 @@ export function getInitialWelcomeMessage(): BotResponse {
   return {
     text: `👋 **${greeting} Welcome to VY NextGen Technologies!**
 
-I'm **VY Assistant**, your dedicated business and technology concierge. Whether you're planning a new website, upgrading your store's billing software, or exploring our leadership team, I'm here to assist you! 😊
+I'm **VY Assistant**, your dedicated tech consultant. Whether you're looking to build a high-performance website, modernize your retail store with fast POS billing, or speak with our leadership team, I'm here to help you every step of the way! 😊
 
-**Popular questions I can answer right now:**
-• 👔 **"Who is company CEO?"** or leadership team
-• 🌐 **Custom Web Development** (React, Next.js, 3–7 day delivery)
-• 🧾 **Billing & POS Solutions** (Fast GST billing, offline-first mode)
-• 💰 **Instant Quotes & Transparent Estimates**
+**Here are some popular topics to explore:**
+• 👔 **"Who is company CEO?"** or meet our executive founders
+• 🌐 **Custom Web & Mobile Development** (React, Next.js, 3–7 day delivery)
+• 🧾 **GST Billing & POS Solutions** (Offline-first, thermal printer & barcode support)
+• 💰 **Instant Project Estimates & Free Consultations**
 
-Feel free to choose a quick topic below or type your question in your own words!`,
+Feel free to click any suggestion below or ask me anything in your own words!`,
     actions: [
       { label: "👔 Meet the CEO", queryText: "Who is the company CEO?", actionType: "quickQuery" },
       { label: "🌐 Web Development", path: "/web-development", actionType: "navigate" },
       { label: "🧾 Billing Software Demo", path: "/billing-software", actionType: "navigate" },
-      { label: "📝 Request Quick Quote", path: "/enquiry", actionType: "navigate" },
-      { label: "💬 WhatsApp Us", externalUrl: "https://wa.me/918754020556?text=Hi%20VY%20NextGen%20Technology,%20I%20am%20chatting%20on%20your%20website%20and%20would%20love%20some%20information.", actionType: "external" },
+      { label: "💰 Request Price Estimate", path: "/enquiry", actionType: "navigate" },
+      { label: "💬 Chat on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi%20VY%20NextGen%20Technology,%20I%20am%20chatting%20on%20your%20website%20and%20would%20love%20some%20information.", actionType: "external" },
     ],
   };
 }
 
-interface KnowledgeItem {
-  keywords: string[];
-  patterns: RegExp[];
-  response: (input: string) => BotResponse;
+interface ConversationContext {
+  lastTopic?: "web" | "billing" | "ceo" | "founder" | "internship" | "careers" | "pricing" | "contact";
+  userName?: string;
 }
 
-export const KNOWLEDGE_BASE: KnowledgeItem[] = [
-  // 1. Who is CEO? (Specific leader query with photo)
-  {
-    keywords: ["ceo", "narendra", "narendhra", "prashath", "prasath", "chief executive"],
-    patterns: [
-      /who.*(is|s).*ceo/i,
-      /company.*ceo/i,
-      /tell.*about.*ceo/i,
-      /about.*narend/i,
-      /who.*leads.*company/i,
-    ],
-    response: () => ({
-      text: `👔 **Chief Executive Officer (CEO) — Mr. Narendhra Prashath**
+/**
+ * Helper to analyze previous conversation history and deduce context
+ */
+function analyzeContext(history?: { sender: "user" | "bot"; text: string }[]): ConversationContext {
+  const ctx: ConversationContext = {};
+  if (!history || history.length === 0) return ctx;
 
-Here are the details of our CEO at **VY NextGen Technologies**:`,
-      leaders: [COMPANY_LEADERS.ceo],
-      actions: [
-        { label: "Read Executive Profiles", path: "/about", actionType: "navigate" },
-        { label: "WhatsApp CEO Office", externalUrl: "https://wa.me/918754020556?text=Hi%20Narendhra%20Prashath%20/%20CEO%20Office,%20I%20am%20interested%20in%20a%20business%20collaboration.", actionType: "external" },
-      ],
-    }),
-  },
+  for (let i = history.length - 1; i >= 0; i--) {
+    const text = history[i].text.toLowerCase();
 
-  // 2. Who is Co-Founder? (Prioritized before Founder to prevent 'co founder' from matching 'founder')
-  {
-    keywords: ["co-founder", "cofounder", "co founder", "yuvan", "shankar raja", "co-founders", "co founders"],
-    patterns: [
-      /who.*(is|s).*(co[-\s]?founder|cofounder)/i,
-      /\b(co[-\s]?founder|cofounder)\b/i,
-      /\byuvan\b/i,
-      /shankar.*raja/i,
-      /about.*(co[-\s]?founder|cofounder)/i,
-      /(tell|details).*co[-\s]?founder/i,
-    ],
-    response: () => ({
-      text: `💡 **Co-Founder — Mr. Yuvan Shankar Raja**
+    // Check for user's introduced name
+    if (history[i].sender === "user") {
+      const nameMatch = text.match(/(?:my name is|i am|i'm|this is|call me)\s+([a-zA-Z]{2,20})/i);
+      if (nameMatch && !ctx.userName) {
+        ctx.userName = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1).toLowerCase();
+      }
+    }
 
-Here are the details of our Co-Founder at **VY NextGen Technologies**:`,
-      leaders: [COMPANY_LEADERS.coFounder],
-      actions: [
-        { label: "Read Full Bio", path: "/about", actionType: "navigate" },
-        { label: "Connect on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20to%20connect%20with%20Co-Founder%20Yuvan%20Shankar%20Raja.", actionType: "external" },
-      ],
-    }),
-  },
+    if (!ctx.lastTopic) {
+      if (text.includes("web") || text.includes("website") || text.includes("frontend") || text.includes("app dev")) {
+        ctx.lastTopic = "web";
+      } else if (text.includes("billing") || text.includes("pos") || text.includes("invoice") || text.includes("inventory")) {
+        ctx.lastTopic = "billing";
+      } else if (text.includes("ceo") || text.includes("narend")) {
+        ctx.lastTopic = "ceo";
+      } else if (text.includes("founder") || text.includes("valiullah") || text.includes("yuvan")) {
+        ctx.lastTopic = "founder";
+      } else if (text.includes("intern") || text.includes("college") || text.includes("student")) {
+        ctx.lastTopic = "internship";
+      } else if (text.includes("job") || text.includes("career") || text.includes("hiring")) {
+        ctx.lastTopic = "careers";
+      } else if (text.includes("price") || text.includes("cost") || text.includes("quote") || text.includes("fee")) {
+        ctx.lastTopic = "pricing";
+      }
+    }
+  }
 
-  // 3. Who are the Founders? (Both Founder & Co-Founder together)
-  {
-    keywords: ["founders", "founding team", "who founded", "both founders"],
-    patterns: [
-      /who.*(are|r).*founders/i,
-      /founders.*of/i,
-      /who.*founded/i,
-      /all.*founders/i,
-      /both.*founders/i,
-    ],
-    response: () => ({
-      text: `🚀 **Founding Leadership — VY NextGen Technologies**
-
-Meet the visionary founders behind our company:
-• **Mr. Valiullah** — Founder & Executive Chairman
-• **Mr. Yuvan Shankar Raja** — Co-Founder`,
-      leaders: [COMPANY_LEADERS.founder, COMPANY_LEADERS.coFounder],
-      actions: [
-        { label: "Read Leadership Profiles", path: "/about", actionType: "navigate" },
-        { label: "Contact Leadership", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 4. Who is Founder & Executive Chairman? (Specific leader query with photo - strictly excludes co-founder)
-  {
-    keywords: ["founder", "chairman", "valiullah", "who started"],
-    patterns: [
-      /who.*(is|s).*(?<!co[-\s]|cofounder\s*)founder\b/i,
-      /\bvaliullah\b/i,
-      /\bchairman\b/i,
-      /who.*started.*(vy|company)/i,
-      /about.*(?<!co[-\s])founder\b/i,
-      /(tell|details).*about.*(?<!co[-\s])founder\b/i,
-    ],
-    response: () => ({
-      text: `🚀 **Founder & Executive Chairman — Mr. Valiullah**
-
-Here are the details of our visionary Founder at **VY NextGen Technologies**:`,
-      leaders: [COMPANY_LEADERS.founder],
-      actions: [
-        { label: "Read Full Bio", path: "/about", actionType: "navigate" },
-        { label: "Contact Leadership", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 4. Who is CTO / CFO? (Specific leader query with photo)
-  {
-    keywords: ["cto", "cfo", "sri prajith", "prajith", "technical officer", "financial officer", "tech lead"],
-    patterns: [
-      /who.*(is|s).*(cto|cfo|tech.*officer|chief.*tech|finance.*officer)/i,
-      /sri.*prajith/i,
-      /prajith/i,
-    ],
-    response: () => ({
-      text: `⚡ **Chief Technology & Chief Financial Officer — Mr. Sri Prajith**
-
-Here are the details of our CTO/CFO commanding cloud infrastructure and fiscal performance:`,
-      leaders: [COMPANY_LEADERS.cto],
-      actions: [
-        { label: "Read Tech Bio", path: "/about", actionType: "navigate" },
-        { label: "Contact Tech Team", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 5. Who is Managing Director? (Specific leader query with photo)
-  {
-    keywords: ["managing director", "md", "santhosh"],
-    patterns: [
-      /who.*(is|s).*(md|managing.*director)/i,
-      /santhosh/i,
-    ],
-    response: () => ({
-      text: `🛠️ **Managing Director — Mr. Santhosh**
-
-Here are the details of our Managing Director steering engineering operations:`,
-      leaders: [COMPANY_LEADERS.md],
-      actions: [
-        { label: "Read Full Bio", path: "/about", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 6. Who is Director? (Specific leader query with photo)
-  {
-    keywords: ["director", "yeswanth"],
-    patterns: [
-      /who.*(is|s).*director/i,
-      /yeswanth/i,
-    ],
-    response: () => ({
-      text: `🤝 **Director — Mr. Yeswanth**
-
-Here are the details of our Director heading strategic client partnerships and market expansion:`,
-      leaders: [COMPANY_LEADERS.director],
-      actions: [
-        { label: "Read Full Bio", path: "/about", actionType: "navigate" },
-        { label: "Discuss Partnership", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 7. General Leadership & Executive Team query (Shows all leaders with photos)
-  {
-    keywords: ["leadership", "leaders", "executives", "management", "board", "directors", "team leaders", "who runs"],
-    patterns: [
-      /leadership.*team/i,
-      /who.*(are|r).*leaders/i,
-      /who.*(are|r).*executives/i,
-      /board.*directors/i,
-      /management.*team/i,
-      /who.*runs.*company/i,
-    ],
-    response: () => ({
-      text: `🏢 **Executive Leadership Team — VY NextGen Technologies**
-
-Meet the visionary leadership team governing our technical innovation, corporate strategy, and client success:`,
-      leaders: [
-        COMPANY_LEADERS.founder,
-        COMPANY_LEADERS.ceo,
-        COMPANY_LEADERS.coFounder,
-        COMPANY_LEADERS.cto,
-        COMPANY_LEADERS.md,
-        COMPANY_LEADERS.director,
-      ],
-      actions: [
-        { label: "Read Full Leadership Story", path: "/about", actionType: "navigate" },
-        { label: "Contact Leadership", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 8. Bot identity / Human vs AI
-  {
-    keywords: ["who are you", "what is your name", "are you human", "are you ai", "real person", "bot"],
-    patterns: [
-      /who.*(are|r)\s*you/i,
-      /what.*your.*name/i,
-      /are.*you.*(real|human|robot|ai|bot)/i,
-      /talk.*to.*human/i,
-      /speak.*with.*person/i,
-    ],
-    response: () => ({
-      text: `Hello! 😊 I'm **VY Assistant**, an intelligent concierge crafted by the engineers at **VY NextGen Technologies**.
-
-While I am powered by software, I work hand-in-hand with our real human team in Tamil Nadu! If you'd like to speak with our CEO **Mr. Narendhra Prashath** or engineering leads directly, we'd love to connect.
-
-Would you like me to connect you with our team right away?`,
-      actions: [
-        { label: "📞 Call +91 87540 20556", externalUrl: "tel:+918754020556", actionType: "external" },
-        { label: "💬 WhatsApp with Human Lead", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20am%20on%20your%20website%20and%20would%20like%20to%20speak%20with%20a%20human%20representative.", actionType: "external" },
-        { label: "📝 Request a Call Back", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 9. Casual small talk: How are you?
-  {
-    keywords: ["how are you", "how are u", "how do you do", "what's up", "whats up", "how r u"],
-    patterns: [
-      /how.*(are|r)\s*(you|u)/i,
-      /how.*going/i,
-      /what'?s\s*up/i,
-    ],
-    response: () => ({
-      text: `I'm doing wonderful, thank you so much for asking! 😊 
-
-I'm having a great day helping entrepreneurs, business owners, and developers build amazing digital products. 
-
-How is your day going, and what exciting project or question can I help you with today?`,
-      actions: [
-        { label: "👔 Who is Company CEO?", queryText: "Who is the company CEO?", actionType: "quickQuery" },
-        { label: "🌐 I need a Website", path: "/web-development", actionType: "navigate" },
-        { label: "🧾 I need Billing Software", path: "/billing-software", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 10. Web Development & Tech Stack
-  {
-    keywords: ["web", "website", "development", "react", "frontend", "backend", "fullstack", "portal", "ecommerce", "online store", "html", "nextjs", "node", "ui", "ux", "redesign"],
-    patterns: [
-      /web\s*dev/i,
-      /build.*(website|site|web)/i,
-      /create.*(website|store|app)/i,
-      /e-?commerce/i,
-      /tech\s*stack/i,
-      /need.*a.*website/i,
-    ],
-    response: () => ({
-      text: `🚀 **Crafting Exceptional Web Experiences!**
-
-We'd love to help you build or revamp your website! At VY NextGen Technologies, our web engineering goes far beyond simple templates:
-
-• **Modern & Fast**: Handcrafted using React, Next.js, TypeScript, and Tailwind CSS.
-• **Lightning Speed**: 95+ PageSpeed scores to guarantee rapid load times and high Google rankings.
-• **100% Mobile Responsive**: Flawless experience on iPhones, Android devices, tablets, and 4K displays.
-• **Swift Turnaround**: Standard business websites are completed in **just 3 to 7 business days**!
-• **Everything Included**: Free SSL, custom domain setup, professional corporate email, and ongoing support.
-
-Would you like to explore our website packages, or would you like a quick quote for your specific idea?`,
-      actions: [
-        { label: "Explore Web Services", path: "/web-development", actionType: "navigate" },
-        { label: "Request Custom Quote", path: "/enquiry", actionType: "navigate" },
-        { label: "💬 Discuss on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20am%20interested%20in%20developing%20a%20website%20for%20my%20business.", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 11. Billing & POS Software
-  {
-    keywords: ["billing", "pos", "point of sale", "retail", "supermarket", "grocery", "restaurant", "pharmacy", "medical", "barcode", "thermal", "gst", "invoice", "counter", "inventory", "stock", "printer"],
-    patterns: [
-      /billing.*software/i,
-      /pos.*system/i,
-      /retail.*software/i,
-      /supermarket/i,
-      /thermal.*print/i,
-      /gst.*invoice/i,
-      /barcode/i,
-    ],
-    response: () => ({
-      text: `🧾 **Smart, High-Speed POS & Billing Software**
-
-Are you running a retail shop, supermarket, restaurant, or wholesale business? Our billing software is built to handle heavy rush hours with zero slowdown:
-
-• **Sub-2-Second Billing**: Rapid barcode scanning and keyboard shortcuts for lightning-fast customer checkout.
-• **100% Offline-First**: Works seamlessly even during internet cuts, syncing automatically when reconnected.
-• **Hardware Compatibility**: Plug-and-play with all standard thermal printers (2-inch, 3-inch), barcode scanners, and cash drawers.
-• **Inventory & Expiry Tracking**: Low-stock notifications and batch-wise expiry alerts so you never lose revenue.
-• **GST Invoices & WhatsApp**: Generate compliant GST tax invoices and send digital receipts straight to your customer's WhatsApp.
-
-**We offer 100% Free Live Demonstrations!** Would you like to schedule a free demo for your store?`,
-      actions: [
-        { label: "View POS Features", path: "/billing-software", actionType: "navigate" },
-        { label: "Schedule Free Demo", path: "/enquiry", actionType: "navigate" },
-        { label: "💬 Book Demo on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20a%20free%20demo%20of%20your%20POS%20Billing%20Software.", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 12. Pricing, Costs, and Estimates
-  {
-    keywords: ["price", "pricing", "cost", "how much", "rate", "quote", "estimation", "budget", "fees", "charge", "packages", "cheap", "expensive", "affordable"],
-    patterns: [
-      /how\s*much/i,
-      /price\s*list/i,
-      /what.*(cost|charge|fee)/i,
-      /get.*quote/i,
-      /affordable/i,
-      /how\s*much\s*is/i,
-    ],
-    response: () => ({
-      text: `💰 **Transparent, Friendly & Fair Pricing**
-
-We believe high-quality engineering should be accessible and transparent without hidden surprise fees:
-
-• **Business Websites**: Starting packages tailored for startups and local businesses, delivered ready-to-launch with free SSL and support.
-• **Custom Portals & E-Commerce**: Flexible quotes based on exact features, user roles, and payment gateways.
-• **Billing & POS Systems**: One-time license options or managed annual support plans per billing counter, including on-site setup and staff training.
-• **Zero-Risk Consultation**: 100% free technical discussion and requirement analysis before any commitment.
-
-Drop your details below and our team will prepare a customized quotation within **2 hours**!`,
-      showLeadForm: true,
-      actions: [
-        { label: "Submit Online Quote Request", path: "/enquiry", actionType: "navigate" },
-        { label: "📞 Call for Instant Quote", externalUrl: "tel:+918754020556", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 13. Timelines & Turnaround speed
-  {
-    keywords: ["timeline", "how long", "how fast", "delivery time", "duration", "days", "weeks", "turnaround"],
-    patterns: [
-      /how.*long.*(take|build|deliver)/i,
-      /when.*(can|will).*deliver/i,
-      /delivery.*time/i,
-      /how.*fast/i,
-    ],
-    response: () => ({
-      text: `⏱️ **Fast Turnarounds Without Cutting Corners!**
-
-Speed is one of our greatest strengths at VY NextGen Technologies:
-
-• **Standard Business Websites**: 3 to 7 business days from requirement sign-off.
-• **E-Commerce & Dynamic Portals**: 10 to 21 business days with full payment gateway & product configuration.
-• **Billing & POS Software Setup**: Same-day or next-day on-site deployment, printer configuration, and staff training!
-
-Do you have a specific launch deadline in mind? Let us know and we'll do everything possible to meet your schedule! 😊`,
-      actions: [
-        { label: "Share Your Target Timeline", path: "/enquiry", actionType: "navigate" },
-        { label: "💬 Fast-Track on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20have%20an%20urgent%20software%20project%20with%20a%20tight%20deadline.", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 14. Careers & Job Openings
-  {
-    keywords: ["career", "careers", "job", "jobs", "hiring", "vacancy", "vacancies", "work", "apply", "developer", "engineer", "resume", "cv", "interview", "recruitment", "salary"],
-    patterns: [
-      /job.*opening/i,
-      /are.*hiring/i,
-      /apply.*job/i,
-      /career.*opportunit/i,
-      /open.*position/i,
-      /fresher.*job/i,
-    ],
-    response: () => ({
-      text: `💼 **Join the VY NextGen Engineering Team!**
-
-We are always looking for passionate builders, problem solvers, and engineers who love modern technologies:
-
-**Currently Active Openings:**
-• 💻 **Frontend Engineer** — React, Next.js, Tailwind CSS, TypeScript
-• ⚙️ **Backend Engineer** — Node.js, Express, PostgreSQL, REST/GraphQL
-• 🚀 **Full-Stack Engineer** — Modern JavaScript/TypeScript stacks
-• 🎨 **UI/UX Designer** — Figma, responsive design systems, micro-animations
-• 📈 **Business Development Specialist** — Retail POS consulting and enterprise client acquisition
-
-**How to Apply:**
-We review applications directly through our **Official Google Recruitment Form** to ensure speedy screening within 48 hours!`,
-      actions: [
-        { label: "View Careers & Apply", path: "/careers", actionType: "navigate" },
-        { label: "💬 Message HR on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hello%20HR%20Team,%20I%20am%20interested%20in%20career%20opportunities%20at%20VY%20NextGen%20Technologies.", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 15. Internship Program
-  {
-    keywords: ["intern", "internship", "training", "student", "college", "certificate", "mern", "learn", "mentor", "stipend", "fresher", "junior", "course"],
-    patterns: [
-      /internship.*program/i,
-      /apply.*intern/i,
-      /student.*training/i,
-      /college.*intern/i,
-      /certificate/i,
-    ],
-    response: () => ({
-      text: `🎓 **Software Engineering Internship & Incubation Program**
-
-Looking to gain real-world product engineering experience instead of just theory? We've got you covered:
-
-• **What You Build**: Production-grade Full-Stack applications using React, TypeScript, Node.js, and databases.
-• **1-on-1 Mentorship**: Senior software architects review your code, guide your architecture, and provide personalized feedback.
-• **Verified Credentials**: Official Certificate of Completion and Letter of Recommendation.
-• **Career Opportunities**: Outstanding interns receive priority consideration for full-time engineering placements.
-• **Flexible Durations**: 1-month and 3-month tracks for college students and recent graduates.`,
-      actions: [
-        { label: "Explore Internship Program", path: "/internship", actionType: "navigate" },
-        { label: "Apply Now", path: "/enquiry", actionType: "navigate" },
-        { label: "💬 Chat with Coordinator", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20am%20interested%20in%20the%20Software%20Development%20Internship%20Program.", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 16. Contact, Phone, Location & Office
-  {
-    keywords: ["contact", "phone", "number", "call", "email", "address", "location", "office", "reach", "whatsapp", "tamil nadu", "where", "hours", "timing", "google map"],
-    patterns: [
-      /how.*contact/i,
-      /phone.*number/i,
-      /what.*email/i,
-      /office.*address/i,
-      /where.*located/i,
-      /give.*me.*number/i,
-    ],
-    response: () => ({
-      text: `📍 **We're Always Here for You!**
-
-You can reach the VY NextGen team through any of these direct channels:
-
-• 📱 **Direct Call**: [+91 87540 20556](tel:+918754020556)
-• 💬 **WhatsApp**: [+91 87540 20556](https://wa.me/918754020556) *(Instant response 24/7)*
-• ✉️ **Official Email**: [vynextgentechnology@gmail.com](mailto:vynextgentechnology@gmail.com)
-• 🏢 **Headquarters**: Tamil Nadu, India *(serving pan-India & global clients)*
-• ⏰ **Support Hours**: Monday to Saturday, 9:00 AM – 7:00 PM IST
-
-Want us to call you back right away? Leave your phone number below!`,
-      showLeadForm: true,
-      actions: [
-        { label: "📞 Call +91 87540 20556", externalUrl: "tel:+918754020556", actionType: "external" },
-        { label: "💬 WhatsApp Us", externalUrl: "https://wa.me/918754020556", actionType: "external" },
-        { label: "📝 Fill Enquiry Form", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-
-  // 17. Tamil / Regional Friendly Greeting
-  {
-    keywords: ["vanakkam", "epdi irukinga", "nandri", "tamil"],
-    patterns: [
-      /vanakkam/i,
-      /epdi\s*iruk/i,
-      /nandri/i,
-    ],
-    response: () => ({
-      text: `வணக்கம்! (Vanakkam!) 🙏
-
-VY NextGen Technologies-க்கு உங்களை அன்போடு வரவேற்கிறோம்! 
-
-எங்கள் தலைமை நிர்வாக அதிகாரி (CEO) **Mr. Narendhra Prashath**, **Web Development**, **Billing / POS Software**, அல்லது **Software Internship** சேவைகள் பற்றி என்ன தகவல் வேண்டும்? உங்களுக்கு உதவ நான் எப்போதும் தயார்! 😊`,
-      actions: [
-        { label: "👔 CEO விவரங்கள்", queryText: "Who is the company CEO?", actionType: "quickQuery" },
-        { label: "🌐 Web Development", path: "/web-development", actionType: "navigate" },
-        { label: "🧾 Billing Software", path: "/billing-software", actionType: "navigate" },
-        { label: "💬 WhatsApp தொடர்பு", externalUrl: "https://wa.me/918754020556?text=Vanakkam%20VY%20NextGen%20Technology,%20enakku%20unga%20services%20patri%20details%20theva.", actionType: "external" },
-      ],
-    }),
-  },
-
-  // 18. Friendly Greetings
-  {
-    keywords: ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "howdy", "sup"],
-    patterns: [
-      /^(hi|hello|hey|namaste|greetings)(\s|$|[!?.])/i,
-    ],
-    response: () => {
-      const greeting = getFriendlyGreeting();
-      return {
-        text: `Hello there! ${greeting} It's so nice to meet you. 😊
-
-How can I help you today?
-• Ask **"Who is company CEO?"** to meet our leadership
-• Planning a **new website or redesign**?
-• Interested in our **Retail POS / Billing software** demo?
-• Want to discuss **pricing and project timelines**?
-
-Feel free to ask whatever is on your mind!`,
-        actions: [
-          { label: "👔 Who is Company CEO?", queryText: "Who is the company CEO?", actionType: "quickQuery" },
-          { label: "🌐 Web Development", path: "/web-development", actionType: "navigate" },
-          { label: "🧾 Billing Software Demo", path: "/billing-software", actionType: "navigate" },
-          { label: "💰 Request Price Quote", path: "/enquiry", actionType: "navigate" },
-          { label: "💬 Chat on WhatsApp", externalUrl: "https://wa.me/918754020556", actionType: "external" },
-        ],
-      };
-    },
-  },
-
-  // 19. Gratitude & Goodbyes
-  {
-    keywords: ["thank", "thanks", "thank you", "thx", "appreciate", "helpful", "great", "awesome", "perfect", "bye", "goodbye", "see you"],
-    patterns: [
-      /thank/i,
-      /you.*helped/i,
-      /great.*job/i,
-      /bye/i,
-      /see.*you/i,
-    ],
-    response: () => ({
-      text: `You're very welcome! It was truly my pleasure helping you! 😊❤️
-
-If you ever have more questions or want to kickstart a project with CEO **Mr. Narendhra Prashath** and our engineering team, we are always just a quick message away on WhatsApp or phone at **+91 87540 20556**.
-
-Wishing you great success with your business endeavors! Have an awesome day ahead! 🚀`,
-      actions: [
-        { label: "💬 Keep in touch on WhatsApp", externalUrl: "https://wa.me/918754020556", actionType: "external" },
-        { label: "📝 Submit Project Details", path: "/enquiry", actionType: "navigate" },
-      ],
-    }),
-  },
-];
+  return ctx;
+}
 
 /**
- * Intelligent semantic matcher to return the most accurate and human-friendly response
+ * Main intelligent conversational matcher with memory, empathetic human handling,
+ * and contextual multi-turn dialogue.
  */
-export function findBotResponse(userMessage: string): BotResponse {
-  const cleanInput = userMessage.trim().toLowerCase();
+export function findBotResponse(userMessage: string, history?: { sender: "user" | "bot"; text: string }[]): BotResponse {
+  const cleanInput = userMessage.trim();
+  const lower = cleanInput.toLowerCase();
+  const ctx = analyzeContext(history);
+  const namePrefix = ctx.userName ? `${ctx.userName}, ` : "";
 
   if (!cleanInput) {
     return {
@@ -711,72 +241,472 @@ export function findBotResponse(userMessage: string): BotResponse {
     };
   }
 
-  // 1. Check regex patterns first
-  for (const item of KNOWLEDGE_BASE) {
-    for (const pattern of item.patterns) {
-      if (pattern.test(cleanInput)) {
-        return item.response(cleanInput);
-      }
+  // 1. Check for Phone Number or Email Lead capture directly in chat
+  const phoneMatch = cleanInput.match(/(?:(?:\+?91[-.\s]?)?[6-9]\d{9})/);
+  const emailMatch = cleanInput.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  if (phoneMatch || emailMatch) {
+    const contactValue = phoneMatch ? phoneMatch[0] : emailMatch![0];
+    return {
+      text: `🎉 **Thank you so much!** I've noted down your contact info: **${contactValue}**.
+      
+Our team, overseen by CEO **Mr. Narendhra Prashath**, will connect with you promptly! Would you prefer a WhatsApp message, a direct phone call, or an email regarding your project scope?`,
+      showLeadForm: true,
+      actions: [
+        { label: "💬 Message on WhatsApp", externalUrl: `https://wa.me/918754020556?text=Hi,%20I%20just%20shared%20my%20contact%20(${contactValue})%20on%20your%20website%20chatbot.`, actionType: "external" },
+        { label: "📞 Request Instant Call", externalUrl: "tel:+918754020556", actionType: "external" },
+        { label: "📝 Fill Full Requirement Form", path: "/enquiry", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 2. Name Introduction & Memory
+  const nameIntro = lower.match(/^(?:my name is|i am|i'm|this is|call me)\s+([a-zA-Z]{2,20})/i);
+  if (nameIntro && nameIntro[1]) {
+    const identifiedName = nameIntro[1].charAt(0).toUpperCase() + nameIntro[1].slice(1).toLowerCase();
+    return {
+      text: `Delighted to meet you, **${identifiedName}**! 😊👋
+      
+Welcome to VY NextGen Technologies! How can I assist you with your project today?
+• Are you looking for a **high-speed custom website or web app**?
+• Interested in our **Billing & GST POS software** demo?
+• Or would you like to discuss pricing and project timelines?`,
+      actions: [
+        { label: "🌐 Web Development", path: "/web-development", actionType: "navigate" },
+        { label: "🧾 Billing Software Demo", path: "/billing-software", actionType: "navigate" },
+        { label: "💰 Request Custom Estimate", path: "/enquiry", actionType: "navigate" },
+        { label: "💬 WhatsApp Us", externalUrl: "https://wa.me/918754020556", actionType: "external" },
+      ],
+    };
+  }
+
+  // 3. Small Talk, Pleasantries & "How are you?"
+  if (/^(how are you|how r u|how are u|how do you do|how is it going|hows it going|whats up|sup|wassup)/i.test(lower)) {
+    return {
+      text: `I'm doing great, thank you so much for asking! 😊✨
+      
+The engineering team here at VY NextGen Technologies has been busy shipping awesome web platforms and retail POS installations. How is your day going, and what exciting project brings you to our website today?`,
+      actions: [
+        { label: "🌐 Need a Website", path: "/web-development", actionType: "navigate" },
+        { label: "🧾 Need POS Billing", path: "/billing-software", actionType: "navigate" },
+        { label: "👔 Who is Company CEO?", queryText: "Who is the company CEO?", actionType: "quickQuery" },
+      ],
+    };
+  }
+
+  // 4. "Who created you?" / "Are you AI or human?"
+  if (/(who (made|created|built) you|are you (ai|human|bot|real)|what is your name)/i.test(lower)) {
+    return {
+      text: `🤖 I'm **VY Assistant**, the official AI concierge for **VY NextGen Technologies**!
+      
+I was engineered by our software development team right here in Tamil Nadu, under the guidance of our leadership team:
+• **Mr. Narendhra Prashath** (CEO)
+• **Mr. Valiullah** (Founder & Chairman)
+• **Mr. Yuvan Shankar Raja** (Co-Founder)
+
+While I handle inquiries 24/7 with lightning speed, our real senior software architects and business consultants are standing by right now if you'd like to talk directly!`,
+      actions: [
+        { label: "📞 Speak to a Real Human", externalUrl: "tel:+918754020556", actionType: "external" },
+        { label: "💬 Chat on WhatsApp", externalUrl: "https://wa.me/918754020556", actionType: "external" },
+        { label: "👔 Meet the Leadership", path: "/about", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 5. Talk to Human / Call Me / Speak to Representative
+  if (/(talk to human|speak to (someone|agent|person|human|sales|rep|manager)|call me|give me (call|ring)|contact human|real person)/i.test(lower)) {
+    return {
+      text: `📞 **${namePrefix}We'd Love to Connect with You Personally!**
+      
+Nothing beats a direct conversation with our engineering and business consulting team:
+• 📱 **Direct Call**: [+91 87540 20556](tel:+918754020556) *(Mon–Sat 9AM–7PM IST)*
+• 💬 **WhatsApp**: [+91 87540 20556](https://wa.me/918754020556) *(Instant response 24/7)*
+• ✉️ **Email**: [vynextgentechnology@gmail.com](mailto:vynextgentechnology@gmail.com)
+
+Drop your phone number below and our senior technical lead will call you back today!`,
+      showLeadForm: true,
+      actions: [
+        { label: "📞 Call +91 87540 20556 Now", externalUrl: "tel:+918754020556", actionType: "external" },
+        { label: "💬 Open WhatsApp Chat", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20to%20speak%20with%20a%20representative.", actionType: "external" },
+        { label: "📝 Fill Enquiry Form", path: "/enquiry", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 6. Discounts, Offers, Negotiation & Deals
+  if (/(discount|offer|deal|concession|reduce price|less price|cheaper|bargain|negotiat|budget friendly|low budget)/i.test(lower)) {
+    return {
+      text: `🤝 **${namePrefix}We Always Support Growing Businesses & Startups!**
+      
+At VY NextGen Technologies, we believe quality software should be accessible to everyone:
+• 🚀 **Startup & New Business Bundles**: Save up to 20% when bundling Web Development + GST Billing software.
+• 💳 **Milestone Payment Flexibility**: Pay in structured phases (30% advance, 40% design/alpha approval, 30% final deployment).
+• 🎁 **Free Extras Included**: Free SSL certificate, free domain guidance, 1 year basic technical maintenance, and Google Business setup!
+
+Talk directly with CEO **Mr. Narendhra Prashath** or our team on WhatsApp to see what special package we can craft for your budget!`,
+      actions: [
+        { label: "💬 Discuss Budget on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20have%20a%20specific%20budget%20for%20my%20software%20project%20and%20would%20like%20to%20discuss%20available%20offers.", actionType: "external" },
+        { label: "📝 Submit Project Scope", path: "/enquiry", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 7. Contextual "How much?" / "Cost" / "Pricing"
+  if (/(how much|cost|price|pricing|charge|rate|fee|package|estimate)/i.test(lower)) {
+    if (ctx.lastTopic === "billing") {
+      return {
+        text: `🧾 **Transparent Pricing for VY POS & Billing Software:**
+        
+• **Starter POS (Single Counter / Retail)**: ₹4,999 – ₹7,999 one-time setup (perpetual license with thermal printing & barcode scan).
+• **Standard Business (Inventory & Multi-User)**: ₹8,999 – ₹14,999 (full stock ledger, WhatsApp invoices, GST GSTR-1/3B export).
+• **Enterprise Multi-Branch / Cloud**: Custom quotation with real-time sync across branches.
+
+🎁 *Zero hidden monthly subscription fees for offline edition! Includes free on-site/remote installation and staff training.*`,
+        showLeadForm: true,
+        actions: [
+          { label: "Book Free POS Demo", path: "/billing-software", actionType: "navigate" },
+          { label: "💬 Get Instant Quote on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20need%20a%20price%20quote%20for%20the%20Billing%20Software.", actionType: "external" },
+        ],
+      };
+    } else if (ctx.lastTopic === "internship") {
+      return {
+        text: `🎓 **Software Internship Program Investment:**
+        
+• **1-Month Fast-Track Sprint**: Production project training, Git/GitHub, React/TypeScript fundamentals.
+• **3-Month Comprehensive Incubation**: Full-stack MERN/Next.js architecture, live client project experience, verified Certificate of Completion & Letter of Recommendation.
+• **Stipend/PPO**: Outstanding performers are shortlisted for paid engineering positions!
+
+Our goal is real industry employability, not just dry classroom theory.`,
+        actions: [
+          { label: "Explore Curriculum", path: "/internship", actionType: "navigate" },
+          { label: "Apply for Internship", path: "/enquiry", actionType: "navigate" },
+        ],
+      };
+    } else {
+      return {
+        text: `💰 **${namePrefix}Transparent & Competitive Project Pricing:**
+        
+• 🌐 **Starter Business Website**: ₹5,999 – ₹9,999 (Fast 3-5 pages, 100% mobile responsive, SEO ready, delivered in 3-5 days).
+• 🚀 **Dynamic Web Portal / Corporate Platform**: ₹12,000 – ₹25,000+ (Custom UI/UX, CMS admin panel, contact forms, custom animations).
+• 🛒 **Full E-Commerce Marketplace**: ₹18,000 – ₹38,000+ (Payment gateway, shopping cart, product catalog, order management).
+• 🧾 **GST Billing & POS Software**: ₹4,999 – ₹14,999 (Thermal printer, barcode scanner, offline-first).
+
+Would you like a tailored quote specifically for your project?`,
+        showLeadForm: true,
+        actions: [
+          { label: "📝 Request Free Custom Quote", path: "/enquiry", actionType: "navigate" },
+          { label: "💬 Discuss on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20a%20price%20estimate%20for%20my%20project.", actionType: "external" },
+        ],
+      };
     }
   }
 
-  // 2. Keyword score matching
-  const inputWords = cleanInput.split(/\W+/).filter(Boolean);
-  const isCoFounderQuery = cleanInput.includes("co founder") || cleanInput.includes("co-founder") || cleanInput.includes("cofounder");
-  let bestMatch: KnowledgeItem | null = null;
-  let highestScore = 0;
+  // 8. Contextual "How long?" / "Timeline"
+  if (/(how long|timeline|turnaround|how fast|delivery time|duration|days|weeks)/i.test(lower)) {
+    return {
+      text: `⏱️ **${namePrefix}Fast Turnarounds Without Compromising Quality:**
+      
+• 🌐 **Standard Business Websites**: 3 to 7 business days from requirement sign-off.
+• 🛒 **E-Commerce & Dynamic Web Apps**: 10 to 21 business days with full payment gateway & product configuration.
+• 🧾 **Billing & POS Deployment**: Same-day or next-day on-site/remote setup, hardware printer configuration, and staff training!
+• 📱 **Mobile Applications**: 2 to 4 weeks for MVP release.
 
-  for (const item of KNOWLEDGE_BASE) {
-    let score = 0;
-    for (const keyword of item.keywords) {
-      const kw = keyword.toLowerCase();
-      // If the user query is specifically about co-founder, do not award points to standalone "founder"
-      if (isCoFounderQuery && kw === "founder") {
-        continue;
-      }
-
-      if (cleanInput.includes(kw)) {
-        const wordCount = kw.split(/[\s-]+/).filter(Boolean).length;
-        // Multi-word phrase matches (e.g. "co founder") are weighted much more heavily than single generic words
-        score += wordCount > 1 ? wordCount * 5 : (kw.length >= 5 ? 3 : 2);
-      }
-
-      for (const word of inputWords) {
-        if (word === kw) {
-          if (isCoFounderQuery && word === "founder") {
-            continue;
-          }
-          score += 2;
-        }
-      }
-    }
-
-    if (score > highestScore) {
-      highestScore = score;
-      bestMatch = item;
-    }
+Do you have a specific launch deadline in mind? Let us know and we'll do everything possible to meet your schedule! 😊`,
+      actions: [
+        { label: "Share Your Target Timeline", path: "/enquiry", actionType: "navigate" },
+        { label: "💬 Fast-Track on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20have%20an%20urgent%20software%20project%20with%20a%20tight%20deadline.", actionType: "external" },
+      ],
+    };
   }
 
-  if (bestMatch && highestScore >= 2) {
-    return bestMatch.response(cleanInput);
+  // 9. CEO Query
+  if (/(who.*(is|s).*ceo|company.*ceo|tell.*about.*ceo|about.*narend|who.*leads.*company|\bceo\b)/i.test(lower)) {
+    return {
+      text: `👔 **Chief Executive Officer (CEO) — Mr. Narendhra Prashath**
+      
+Mr. Narendhra Prashath heads executive governance, client technology advisory, and digital transformation initiatives at **VY NextGen Technologies**. Under his leadership, our team has delivered dozens of custom web applications and enterprise retail systems across Tamil Nadu and pan-India.`,
+      leaders: [COMPANY_LEADERS.ceo],
+      actions: [
+        { label: "Read Executive Profiles", path: "/about", actionType: "navigate" },
+        { label: "WhatsApp CEO Office", externalUrl: "https://wa.me/918754020556?text=Hi%20Narendhra%20Prashath%20/%20CEO%20Office,%20I%20am%20interested%20in%20a%20business%20collaboration.", actionType: "external" },
+        { label: "Who is Co-Founder?", queryText: "Who is the co-founder?", actionType: "quickQuery" },
+      ],
+    };
   }
 
-  // 3. Empathetic smart fallback response
+  // 10. Co-Founder Query
+  if (/(co[-\s]?founder|cofounder|\byuvan\b|shankar.*raja)/i.test(lower)) {
+    return {
+      text: `💡 **Co-Founder — Mr. Yuvan Shankar Raja**
+      
+Mr. Yuvan Shankar Raja is the Co-Founder steering business architecture, financial technology innovation, and strategic corporate alliances at **VY NextGen Technologies**.`,
+      leaders: [COMPANY_LEADERS.coFounder],
+      actions: [
+        { label: "Read Full Bio", path: "/about", actionType: "navigate" },
+        { label: "Connect on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20to%20connect%20with%20Co-Founder%20Yuvan%20Shankar%20Raja.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 11. Founder & Executive Chairman
+  if (/(who.*(is|s).*founder|valiullah|executive chairman|\bchairman\b)/i.test(lower) && !lower.includes("co founder") && !lower.includes("co-founder")) {
+    return {
+      text: `🏛️ **Founder & Executive Chairman — Mr. Valiullah**
+      
+Mr. Valiullah is the founding visionary behind **VY NextGen Technologies**, guiding core engineering architectures, POS retail engines, and developer incubation programs.`,
+      leaders: [COMPANY_LEADERS.founder],
+      actions: [
+        { label: "Read Executive Profiles", path: "/about", actionType: "navigate" },
+        { label: "Connect on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20to%20connect%20with%20Founder%20Valiullah.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 12. Complete Leadership Team
+  if (/(leadership|management|directors|board|team leaders|who runs|founders)/i.test(lower)) {
+    return {
+      text: `🌟 **Executive Leadership Team — VY NextGen Technologies**
+      
+Our company is led by seasoned industry builders and technologists:
+• **Mr. Narendhra Prashath** — Chief Executive Officer (CEO)
+• **Mr. Valiullah** — Founder & Executive Chairman
+• **Mr. Yuvan Shankar Raja** — Co-Founder
+• **Mr. Sri Prajith** — Chief Technology & Chief Financial Officer (CTO/CFO)
+• **Mr. Santhosh** — Managing Director (MD)
+• **Mr. Yeswanth** — Director`,
+      leaders: [
+        COMPANY_LEADERS.ceo,
+        COMPANY_LEADERS.founder,
+        COMPANY_LEADERS.coFounder,
+      ],
+      actions: [
+        { label: "View All Executive Bios", path: "/about", actionType: "navigate" },
+        { label: "💬 Connect with Leadership", externalUrl: "https://wa.me/918754020556", actionType: "external" },
+      ],
+    };
+  }
+
+  // 13. Web Development Queries
+  if (/(web|website|web app|frontend|react|nextjs|portal|landing page|ecommerce|e-commerce|online store)/i.test(lower)) {
+    return {
+      text: `🌐 **${namePrefix}World-Class Web & Digital Platform Engineering**
+      
+We don't build generic template sites — we build lightning-fast, high-converting digital experiences:
+• ⚡ **Modern Tech Stack**: React, Next.js, TypeScript, Tailwind CSS, Node.js, and PostgreSQL.
+• 📱 **100% Responsive**: Pixel-perfect layout across iPhones, Androids, iPads, and desktops.
+• 🚀 **SEO & Performance**: 95+ Google PageSpeed score, sub-1-second load times, structured schema markup.
+• 🛒 **E-Commerce Ready**: Razorpay, Stripe, WhatsApp order checkout, and custom admin dashboard.
+• 🛡️ **Source Code Ownership**: You own 100% of your code and intellectual property. No vendor lock-in!`,
+      actions: [
+        { label: "Explore Web Engineering", path: "/web-development", actionType: "navigate" },
+        { label: "💰 Calculate Cost Estimate", path: "/enquiry", actionType: "navigate" },
+        { label: "⏱️ Delivery Timelines", queryText: "How long does a website take to build?", actionType: "quickQuery" },
+        { label: "💬 WhatsApp Us", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20am%20interested%20in%20Web%20Development%20services.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 14. Billing Software & POS Solutions
+  if (/(billing|pos|invoice|invoicing|gst|thermal|barcode|inventory|counter|retail software|supermarket|restaurant|pharmacy)/i.test(lower)) {
+    return {
+      text: `🧾 **${namePrefix}High-Speed Retail Billing & POS Software**
+      
+Engineered specifically for supermarkets, grocery stores, textile shops, restaurants, pharmacies, and wholesale distribution:
+• ⚡ **Sub-2-Second Checkout**: Lightning-quick barcode lookup and 1-click invoice printing.
+• 📴 **100% Offline Capability**: Never lose a sale even during internet or power interruptions!
+• 🖨️ **Hardware Compatible**: Works seamlessly with thermal receipt printers (2-inch & 3-inch), laser printers, USB/Bluetooth barcode scanners, and cash drawers.
+• 📲 **WhatsApp Invoices**: Send digital PDF bills directly to customer mobile numbers to save paper.
+• 📊 **Smart GST Filing**: Automatic GSTR-1, GSTR-3B tax calculations and Excel/Tally exports.`,
+      actions: [
+        { label: "Explore Billing Features", path: "/billing-software", actionType: "navigate" },
+        { label: "🛒 Schedule Free Demo", path: "/billing-software", actionType: "navigate" },
+        { label: "💰 Pricing Packages", queryText: "How much does billing software cost?", actionType: "quickQuery" },
+        { label: "💬 Chat on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20need%20a%20demo%20of%20the%20Billing%20Software.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 15. Mobile App Development
+  if (/(mobile app|android|ios|flutter|react native|apk|app development)/i.test(lower)) {
+    return {
+      text: `📱 **Native & Cross-Platform Mobile Application Development**
+      
+We build slick, intuitive mobile applications that users love:
+• 🍏 **iOS & Android**: Single unified codebase using React Native or Flutter, saving you up to 40% on build costs.
+• 🔔 **Real-Time Push Notifications**: Firebase messaging, custom alerts, and user retention workflows.
+• 💳 **In-App Payments**: Secure UPI, credit card, netbanking, and wallet integrations.
+• 🚀 **App Store & Play Store Guidance**: Complete assistance with Google Play Console and Apple Developer account deployment.`,
+      actions: [
+        { label: "Request App Architecture Call", path: "/enquiry", actionType: "navigate" },
+        { label: "💬 Discuss App on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20want%20to%20develop%20a%20Mobile%20App.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 16. Maintenance, Support & AMC
+  if (/(maintenance|support|amc|after launch|bug|update|warranty|post launch)/i.test(lower)) {
+    return {
+      text: `🛡️ **Long-Term Peace of Mind & Dedicated Support**
+      
+We never launch and leave:
+• 🎁 **Free Warranty**: All our web and billing projects include 30 to 90 days of free post-launch bug fixing and support.
+• 🔄 **Annual Maintenance Contracts (AMC)**: Affordable packages for regular security patches, content updates, server monitoring, and automated backups.
+• ⚡ **Dedicated SLA**: Fast priority response via WhatsApp and telephone hotline (+91 87540 20556).`,
+      actions: [
+        { label: "💬 Inquire About AMC Support", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20would%20like%20to%20know%20about%20your%20maintenance%20and%20support%20packages.", actionType: "external" },
+        { label: "Contact Us", path: "/enquiry", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 17. NDA & Intellectual Property / Source Code Ownership
+  if (/(nda|confidential|source code|ownership|ip|intellectual property|security)/i.test(lower)) {
+    return {
+      text: `🔒 **100% Intellectual Property Ownership & Confidentiality**
+      
+• 📝 **Mutual Non-Disclosure Agreement (NDA)**: We gladly sign strict NDAs before you share sensitive business workflows or startup concepts.
+• 💻 **Full Source Code Handover**: Once the project milestone is settled, you receive complete repository ownership with clean documentation. No proprietary lock-ins or recurring code ransom!
+• 🛡️ **Enterprise Security**: Industry best practices for data encryption, HTTPS/SSL, and secure database schemas.`,
+      actions: [
+        { label: "Request Mutual NDA", path: "/enquiry", actionType: "navigate" },
+        { label: "💬 Message on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20have%20a%20confidential%20project%20and%20would%20like%20to%20discuss%20with%20an%20NDA.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 18. Careers & Hiring
+  if (/(career|careers|job|jobs|hiring|vacancy|vacancies|apply|resume|cv|developer job|fresher job)/i.test(lower)) {
+    return {
+      text: `💼 **Build the Future with VY NextGen Technologies!**
+      
+We are always on the lookout for hungry builders, problem solvers, and engineers:
+• 💻 **Frontend Engineer**: React, Next.js, Tailwind CSS, TypeScript
+• ⚙️ **Backend Engineer**: Node.js, Express, PostgreSQL, REST/GraphQL
+• 🚀 **Full-Stack Developer**: Modern JavaScript / TypeScript architectures
+• 🎨 **UI/UX Designer**: Figma wireframes, clickable prototypes, micro-animations
+• 📈 **Business Development Specialist**: Retail POS consulting & client acquisition
+
+Applications are screened within 48 hours!`,
+      actions: [
+        { label: "View Openings & Apply", path: "/careers", actionType: "navigate" },
+        { label: "💬 Message HR on WhatsApp", externalUrl: "https://wa.me/918754020556?text=Hello%20HR%20Team,%20I%20am%20interested%20in%20career%20opportunities%20at%20VY%20NextGen%20Technologies.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 19. Internship Program
+  if (/(intern|internship|training|student|college|certificate|mern|learn|mentor|stipend)/i.test(lower)) {
+    return {
+      text: `🎓 **Software Engineering Internship & Incubation Program**
+      
+Gain actual product engineering experience that elevates your career:
+• 🛠️ **Real-World Code**: Build production-grade Full-Stack applications with React, TypeScript, and Node.js.
+• 👨‍🏫 **1-on-1 Mentorship**: Senior software architects review your pull requests and guide your system design.
+• 📜 **Verified Credentials**: Official Certificate of Completion and personalized Letter of Recommendation.
+• 💼 **Placement Opportunities**: High-performing interns receive immediate consideration for full-time engineering placements!`,
+      actions: [
+        { label: "Explore Internship Program", path: "/internship", actionType: "navigate" },
+        { label: "Apply Now", path: "/enquiry", actionType: "navigate" },
+        { label: "💬 Chat with Coordinator", externalUrl: "https://wa.me/918754020556?text=Hi,%20I%20am%20interested%20in%20the%20Software%20Development%20Internship%20Program.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 20. Contact & Location
+  if (/(contact|phone|number|call|email|address|location|office|reach|whatsapp|where.*located|tamil nadu|madurai|chennai|hours)/i.test(lower)) {
+    return {
+      text: `📍 **We're Always Here for You!**
+      
+• 📱 **Direct Call**: [+91 87540 20556](tel:+918754020556)
+• 💬 **WhatsApp**: [+91 87540 20556](https://wa.me/918754020556) *(Instant response 24/7)*
+• ✉️ **Official Email**: [vynextgentechnology@gmail.com](mailto:vynextgentechnology@gmail.com)
+• 🏢 **Headquarters**: Tamil Nadu, India *(serving pan-India & global clients)*
+• ⏰ **Business Hours**: Monday to Saturday, 9:00 AM – 7:00 PM IST
+
+Leave your contact number below and we'll reach out to you within the hour!`,
+      showLeadForm: true,
+      actions: [
+        { label: "📞 Call +91 87540 20556", externalUrl: "tel:+918754020556", actionType: "external" },
+        { label: "💬 WhatsApp Us", externalUrl: "https://wa.me/918754020556", actionType: "external" },
+        { label: "📝 Fill Enquiry Form", path: "/enquiry", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 21. Tamil / Regional Friendly Greeting & Tanglish
+  if (/(vanakkam|epdi irukinga|nandri|tamil|website venum|billing venum|evalavu|evlo|panradhu)/i.test(lower)) {
+    return {
+      text: `வணக்கம்! (Vanakkam!) 🙏
+      
+VY NextGen Technologies-க்கு உங்களை அன்போடு வரவேற்கிறோம்!
+நமது தலைமை நிர்வாக அதிகாரி (CEO) **Mr. Narendhra Prashath** தலைமையிலான எங்கள் தொழில்நுட்ப குழு உங்களுக்கு உதவ தயாராக உள்ளது:
+
+• 🌐 **Custom Website & Web Application**: அதிவேகமான மற்றும் மொபைலில் அருமையாக இயங்கும் இணையதளங்கள் (3-7 நாட்களில் டெலிவரி).
+• 🧾 **GST Billing & POS Software**: மளிகை, சூப்பர் மார்க்கெட், ரெஸ்டாரன்ட் & டெக்ஸ்டைல் கடைகளுக்கான அதிவேக பில்லிங் சாப்ட்வேர் (ஆஃப்லைன் வசதியுடன்).
+• 🎓 **Software Internship**: மாணவர்களுக்கான நேரடி பயிற்சி & சான்றிதழ்.
+
+உங்களுக்கு எந்த சேவை பற்றி தகவல் வேண்டும்? தமிழ் அல்லது ஆங்கிலத்தில் தாராளமாக கேளுங்கள்! 😊`,
+      actions: [
+        { label: "👔 CEO விவரங்கள்", queryText: "Who is the company CEO?", actionType: "quickQuery" },
+        { label: "🌐 Web Development", path: "/web-development", actionType: "navigate" },
+        { label: "🧾 Billing Software", path: "/billing-software", actionType: "navigate" },
+        { label: "💬 WhatsApp தொடர்பு (+91 87540 20556)", externalUrl: "https://wa.me/918754020556?text=Vanakkam%20VY%20NextGen%20Technology,%20enakku%20unga%20services%20patri%20details%20theva.", actionType: "external" },
+      ],
+    };
+  }
+
+  // 22. Greetings
+  if (/^(hi|hello|hey|namaste|good morning|good afternoon|good evening|greetings)(\s|$|[!?.])/i.test(lower)) {
+    const greeting = getFriendlyGreeting();
+    return {
+      text: `Hello there! ${greeting} It's wonderful to connect with you. 😊
+      
+How can I assist you with your business goals today?
+• Planning a **new custom website or redesigning an existing one**?
+• Looking for a **retail POS & GST Billing software demo**?
+• Interested in **meeting our CEO & executive leadership team**?
+• Want to discuss **pricing and project timelines**?
+
+Feel free to ask whatever is on your mind!`,
+      actions: [
+        { label: "👔 Who is Company CEO?", queryText: "Who is the company CEO?", actionType: "quickQuery" },
+        { label: "🌐 Web Development", path: "/web-development", actionType: "navigate" },
+        { label: "🧾 Billing Software Demo", path: "/billing-software", actionType: "navigate" },
+        { label: "💰 Request Price Quote", path: "/enquiry", actionType: "navigate" },
+        { label: "💬 Chat on WhatsApp", externalUrl: "https://wa.me/918754020556", actionType: "external" },
+      ],
+    };
+  }
+
+  // 23. Gratitude & Goodbyes
+  if (/(thank|thanks|thank you|thx|appreciate|helpful|great job|awesome|bye|goodbye|see you)/i.test(lower)) {
+    return {
+      text: `You're very welcome, ${namePrefix}! It was truly my pleasure helping you! 😊❤️
+      
+If you ever have more questions or want to kickstart a project with CEO **Mr. Narendhra Prashath** and our engineering team, we are always just a quick message away on WhatsApp or phone at **+91 87540 20556**.
+      
+Wishing you tremendous success with your business! Have an amazing day ahead! 🚀`,
+      actions: [
+        { label: "💬 Keep in touch on WhatsApp", externalUrl: "https://wa.me/918754020556", actionType: "external" },
+        { label: "📝 Submit Project Details", path: "/enquiry", actionType: "navigate" },
+      ],
+    };
+  }
+
+  // 24. Empathetic Fallback with Context Sensitivity
   return {
-    text: `That's an interesting question! 😊 
-
-While I might need a bit more specific context to give you the exact technical answer, here are the main ways our team can help:
-
+    text: `That's an interesting question${namePrefix ? `, ${namePrefix}` : ""}! 😊
+    
+To ensure you get the most accurate and thoughtful answer, here are the main ways our team can help:
 • 👔 **Executive Leadership**: Ask me *"Who is the CEO?"* or *"Who is the founder?"*
-• 🌐 **Custom Web Platforms**: High-speed, responsive websites built with React & Next.js
+• 🌐 **Custom Web & Mobile Platforms**: Fast, responsive websites built with React & Next.js
 • 🧾 **POS & Retail Billing**: Sub-2s checkout, offline mode, GST tax reports & WhatsApp receipts
-• 💰 **Custom Quotations**: 100% free consultation and project estimates
+• 💰 **Custom Quotations**: 100% free consultation and project scope breakdown
 
-Would you like to connect directly with CEO **Mr. Narendhra Prashath** and our team on WhatsApp?`,
+Would you like to connect directly with CEO **Mr. Narendhra Prashath** or our senior tech leads right now?`,
     showLeadForm: true,
     actions: [
       { label: "👔 Meet the CEO", queryText: "Who is the company CEO?", actionType: "quickQuery" },
-      { label: "Request Free Consultation", path: "/enquiry", actionType: "navigate" },
+      { label: "📝 Request Free Consultation", path: "/enquiry", actionType: "navigate" },
       { label: "💬 Chat on WhatsApp (+91 87540 20556)", externalUrl: "https://wa.me/918754020556", actionType: "external" },
     ],
   };

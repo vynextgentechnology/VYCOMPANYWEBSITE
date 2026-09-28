@@ -138,7 +138,30 @@ export function Chatbot() {
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Prevent scroll chaining and Lenis hijacking when scrolling inside chat
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el || !isOpen) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.stopPropagation();
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const atTop = scrollTop <= 0 && e.deltaY < 0;
+      const atBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight && e.deltaY > 0;
+
+      if (atTop || atBottom) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [isOpen]);
 
   // Sync to sessionStorage
   useEffect(() => {
@@ -244,11 +267,11 @@ export function Chatbot() {
     setInputText("");
     setIsTyping(true);
 
-    // Natural typing delay (500ms - 850ms) to feel human
-    const delay = Math.min(850, Math.max(450, trimmed.length * 20));
+    // Natural human typing delay based on thought and response formulation
+    const delay = Math.min(1000, Math.max(500, Math.floor(Math.random() * 250) + 450));
 
     setTimeout(() => {
-      const response = findBotResponse(trimmed);
+      const response = findBotResponse(trimmed, messages);
       const botMsg: ChatMessage = {
         id: "msg-bot-" + Date.now(),
         sender: "bot",
@@ -552,7 +575,8 @@ _Sent directly via VY NextGen Website Assistant_`;
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
-            style={{ transformOrigin: "bottom right" }}
+            style={{ transformOrigin: "bottom right", overscrollBehavior: "contain" }}
+            data-lenis-prevent
             className={`fixed z-50 flex flex-col overflow-hidden bg-slate-950/98 backdrop-blur-2xl border border-cyan-500/30 text-slate-100 shadow-[0_20px_60px_-15px_rgba(4,29,87,0.9)] rounded-2xl sm:rounded-3xl
               right-3 sm:right-6 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-24
               ${
@@ -651,8 +675,9 @@ _Sent directly via VY NextGen Website Assistant_`;
 
             {/* Quick Topic Chips Scrollable Row */}
             <div
-              className="px-3 py-2 bg-slate-950/90 border-b border-slate-800/70 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden no-scrollbar shrink-0 select-none"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              data-lenis-prevent
+              className="px-3 py-2 bg-slate-950/90 border-b border-slate-800/70 flex items-center gap-1.5 overflow-x-auto overflow-y-hidden no-scrollbar shrink-0 select-none overscroll-contain"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none", overscrollBehavior: "contain" }}
             >
               {QUICK_SUGGESTIONS.map((item) => (
                 <button
@@ -667,7 +692,13 @@ _Sent directly via VY NextGen Website Assistant_`;
             </div>
 
             {/* Chat Messages Scroll Container */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 space-y-3.5 text-xs sm:text-sm chat-scrollbar overscroll-contain">
+            <div
+              ref={messagesContainerRef}
+              data-lenis-prevent
+              onWheel={(e) => e.stopPropagation()}
+              className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 space-y-3.5 text-xs sm:text-sm chat-scrollbar overscroll-contain touch-pan-y"
+              style={{ overscrollBehavior: "contain", WebkitOverflowScrolling: "touch" }}
+            >
               {messages.map((msg) => (
                 <motion.div
                   key={msg.id}
