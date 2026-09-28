@@ -18,12 +18,13 @@ export function useIsPastHero() {
 
     const checkScroll = () => {
       const heroEl = document.getElementById("hero-section");
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
       if (heroEl) {
         const rect = heroEl.getBoundingClientRect();
-        // Reveal navigation when reaching the end of the hero scrub
-        setIsPastHero(rect.bottom <= window.innerHeight * 1.05);
+        // On mobile, reveal when scrolling down past top header; on desktop, reveal when finishing scrub
+        setIsPastHero(isMobile ? rect.top < -80 : rect.bottom <= window.innerHeight * 1.05);
       } else {
-        setIsPastHero(window.scrollY > (window.innerWidth < 768 ? 200 : 1500));
+        setIsPastHero(window.scrollY > (isMobile ? 80 : 1500));
       }
     };
 
