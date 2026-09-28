@@ -176,30 +176,6 @@
   animation: pulseSlow 6s ease-in-out infinite;
 }
 
-/* Audio Equalizer Visualizer Waves */
-@keyframes soundWave {
-  0%, 100% {
-    height: 4px;
-    opacity: 0.4;
-  }
-  50% {
-    height: 16px;
-    opacity: 1;
-  }
-}
-
-.animate-wave-1 {
-  animation: soundWave 0.75s ease-in-out infinite;
-}
-.animate-wave-2 {
-  animation: soundWave 0.55s ease-in-out infinite 0.18s;
-}
-.animate-wave-3 {
-  animation: soundWave 0.92s ease-in-out infinite 0.35s;
-}
-.animate-wave-4 {
-  animation: soundWave 0.68s ease-in-out infinite 0.1s;
-}
 
 /* Custom Scrollbars for Chatbot */
 .no-scrollbar::-webkit-scrollbar {

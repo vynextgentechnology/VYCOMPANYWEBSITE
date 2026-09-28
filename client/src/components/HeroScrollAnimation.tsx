@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronDown, Volume2, VolumeX } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 const TOTAL_FRAMES = 207;
 const FRAME_PREFIX_DESKTOP = "/hero-frames/ezgif-frame-";
 const FRAME_PREFIX_MOBILE = "/hero-frames-mobile/ezgif-frame-";
 const FRAME_EXT = ".jpg";
-const AUDIO_URL = "/audio/hero-audio.mp3";
-const AUDIO_DURATION = 10.762;
 
 export function HeroScrollAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -45,39 +43,6 @@ export function HeroScrollAnimation() {
 
   // Velocity tracking
   const lastScrollProgressRef = useRef<number>(0);
-  const lastScrollTimeRef = useRef<number>(0);
-
-  // Sound Engine
-  const [isMuted, setIsMuted] = useState<boolean>(true);
-  const [isAudioActive, setIsAudioActive] = useState<boolean>(false);
-  const isMutedRef = useRef<boolean>(true);
-
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const forwardBufferRef = useRef<AudioBuffer | null>(null);
-  const reverseBufferRef = useRef<AudioBuffer | null>(null);
-  const activeSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const activeDirectionRef = useRef<"forward" | "reverse" | null>(null);
-  const currentPlaybackRateRef = useRef<number>(1);
-  const scrollStopTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isAudioLoadedRef = useRef<boolean>(false);
-  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Keep isMutedRef synchronized
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-    if (gainNodeRef.current && audioContextRef.current) {
-      const now = audioContextRef.current.currentTime;
-      if (isMuted) {
-        gainNodeRef.current.gain.setTargetAtTime(0, now, 0.05);
-      } else if (isHeroVisibleRef.current && currentProgressRef.current < 0.88) {
-        gainNodeRef.current.gain.setTargetAtTime(0.85, now, 0.08);
-      }
-    }
-    if (fallbackAudioRef.current) {
-      fallbackAudioRef.current.muted = isMuted;
-    }
-  }, [isMuted]);
 
   // Uses lightweight 36KB mobile frames on mobile, full master frames on desktop
   const getFrameUrl = useCallback((index: number) => {
@@ -199,7 +164,6 @@ export function HeroScrollAnimation() {
         if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) loadSingleFrame(i);
       }
     }
-    // Loaded frames are retained in memory to avoid garbage collection stutter
   }, [loadSingleFrame]);
 
   // Canvas geometry & fill-rate optimization
@@ -211,7 +175,7 @@ export function HeroScrollAnimation() {
     setIsMobile(isMob);
     isMobileRef.current = isMob;
 
-    // Optimized DPR: 1.1x on mobile, 1.5x on desktop for high fill-rate efficiency without lag
+    // Optimized DPR: 1.15x on mobile, 1.5x on desktop for high fill-rate efficiency without lag
     const dpr = isMob ? Math.min(window.devicePixelRatio || 1, 1.15) : Math.min(window.devicePixelRatio || 1, 1.5);
     const displayW = window.innerWidth;
     const displayH = window.innerHeight;
@@ -276,125 +240,6 @@ export function HeroScrollAnimation() {
     return () => clearTimeout(timer);
   }, [loadSingleFrame, preloadSurroundingFrames]);
 
-  const initAudio = useCallback(async () => {
-    if (audioContextRef.current && isAudioLoadedRef.current) {
-      if (audioContextRef.current.state === "suspended") {
-        await audioContextRef.current.resume().catch(() => {});
-      }
-      return;
-    }
-
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-
-      const audioCtx = audioContextRef.current || new AudioCtx();
-      audioContextRef.current = audioCtx;
-
-      if (audioCtx.state === "suspended") {
-        await audioCtx.resume().catch(() => {});
-      }
-
-      if (!gainNodeRef.current) {
-        const gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-        gainNode.connect(audioCtx.destination);
-        gainNodeRef.current = gainNode;
-      }
-
-      const res = await fetch(AUDIO_URL);
-      const arrayBuffer = await res.arrayBuffer();
-      const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      forwardBufferRef.current = decodedBuffer;
-
-      const numChannels = decodedBuffer.numberOfChannels;
-      const length = decodedBuffer.length;
-      const sampleRate = decodedBuffer.sampleRate;
-      const revBuffer = audioCtx.createBuffer(numChannels, length, sampleRate);
-
-      for (let ch = 0; ch < numChannels; ch++) {
-        const src = decodedBuffer.getChannelData(ch);
-        const dst = revBuffer.getChannelData(ch);
-        for (let i = 0, j = length - 1; i < length; i++, j--) {
-          dst[i] = src[j];
-        }
-      }
-      reverseBufferRef.current = revBuffer;
-      isAudioLoadedRef.current = true;
-      setIsAudioActive(true);
-    } catch {
-      isAudioLoadedRef.current = false;
-    }
-  }, []);
-
-  const stopCurrentSource = useCallback(() => {
-    if (gainNodeRef.current && audioContextRef.current) {
-      gainNodeRef.current.gain.setTargetAtTime(0, audioContextRef.current.currentTime, 0.04);
-    }
-    if (activeSourceRef.current) {
-      try {
-        activeSourceRef.current.stop(audioContextRef.current ? audioContextRef.current.currentTime + 0.05 : 0);
-      } catch {}
-      activeSourceRef.current = null;
-      activeDirectionRef.current = null;
-    }
-    if (fallbackAudioRef.current && !fallbackAudioRef.current.paused) {
-      fallbackAudioRef.current.pause();
-    }
-  }, []);
-
-  const syncAudioToScroll = useCallback((progress: number, isScrollingDown: boolean, speedMultiplier: number) => {
-    if (isMutedRef.current || !isHeroVisibleRef.current) {
-      stopCurrentSource();
-      return;
-    }
-
-    const targetAudioTime = Math.min(AUDIO_DURATION - 0.05, Math.max(0, progress * AUDIO_DURATION));
-
-    if (isAudioLoadedRef.current && forwardBufferRef.current && audioContextRef.current && gainNodeRef.current) {
-      const audioCtx = audioContextRef.current;
-      if (audioCtx.state === "suspended") {
-        audioCtx.resume().catch(() => {});
-      }
-
-      const desiredDirection = isScrollingDown ? "forward" : "reverse";
-      const bufferToUse = isScrollingDown ? forwardBufferRef.current : reverseBufferRef.current;
-      if (!bufferToUse) return;
-
-      const sourceOffset = isScrollingDown
-        ? targetAudioTime
-        : Math.max(0, Math.min(AUDIO_DURATION, AUDIO_DURATION - targetAudioTime));
-
-      const now = audioCtx.currentTime;
-      const targetRate = Math.max(0.65, Math.min(2.0, speedMultiplier));
-
-      if (activeSourceRef.current && activeDirectionRef.current === desiredDirection) {
-        if (Math.abs(currentPlaybackRateRef.current - targetRate) > 0.1) {
-          activeSourceRef.current.playbackRate.setTargetAtTime(targetRate, now, 0.05);
-          currentPlaybackRateRef.current = targetRate;
-        }
-        return;
-      }
-
-      stopCurrentSource();
-
-      const newSource = audioCtx.createBufferSource();
-      newSource.buffer = bufferToUse;
-      newSource.playbackRate.setValueAtTime(targetRate, now);
-      currentPlaybackRateRef.current = targetRate;
-      newSource.connect(gainNodeRef.current);
-
-      try {
-        newSource.start(0, Math.min(AUDIO_DURATION - 0.05, Math.max(0, sourceOffset)));
-        activeSourceRef.current = newSource;
-        activeDirectionRef.current = desiredDirection;
-        gainNodeRef.current.gain.setValueAtTime(0.01, now);
-        gainNodeRef.current.gain.setTargetAtTime(0.85, now + 0.01, 0.04);
-        setIsAudioActive(true);
-      } catch {}
-    }
-  }, [stopCurrentSource]);
-
   const updateOverlayStyles = useCallback((progress: number) => {
     if (headerRef.current) {
       if (progress <= 0.18) {
@@ -457,36 +302,14 @@ export function HeroScrollAnimation() {
 
     updateOverlayStyles(currentProgress);
 
-    const prevProgress = lastScrollProgressRef.current;
-    const deltaProgress = Math.abs(currentProgress - prevProgress);
-    const now = performance.now();
-    const deltaTime = Math.max(16, now - lastScrollTimeRef.current);
     lastScrollProgressRef.current = currentProgress;
-    lastScrollTimeRef.current = now;
-
-    const scrollRate = (deltaProgress * AUDIO_DURATION) / (deltaTime / 1000);
-    const speedMultiplier = Math.max(0.65, Math.min(2.0, scrollRate || 1.0));
-
-    if (currentProgress < 0.88) {
-      syncAudioToScroll(currentProgress, isScrollingDown, speedMultiplier);
-
-      if (scrollStopTimerRef.current) {
-        clearTimeout(scrollStopTimerRef.current);
-      }
-      scrollStopTimerRef.current = setTimeout(() => {
-        stopCurrentSource();
-      }, 180);
-    } else {
-      stopCurrentSource();
-    }
-
     isTickingRef.current = false;
 
     if (Math.abs(targetProgress - currentProgress) > 0.001) {
       isTickingRef.current = true;
       rafIdRef.current = requestAnimationFrame(updateAnimation);
     }
-  }, [drawFrame, updateOverlayStyles, syncAudioToScroll, stopCurrentSource, preloadSurroundingFrames]);
+  }, [drawFrame, updateOverlayStyles, preloadSurroundingFrames]);
 
   const calculateScrollProgress = useCallback(() => {
     const container = containerRef.current;
@@ -521,7 +344,6 @@ export function HeroScrollAnimation() {
       }
       window.removeEventListener("scroll", onScroll);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-      if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
     };
   }, [isMobile, onScroll]);
 
@@ -537,9 +359,6 @@ export function HeroScrollAnimation() {
         if (entry.isIntersecting) {
           const currentFrame = Math.round(currentProgressRef.current * (TOTAL_FRAMES - 1));
           drawFrame(currentFrame);
-        } else {
-          stopCurrentSource();
-          if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
         }
       },
       { threshold: 0.01 }
@@ -547,26 +366,7 @@ export function HeroScrollAnimation() {
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, [drawFrame, stopCurrentSource]);
-
-  useEffect(() => {
-    return () => {
-      stopCurrentSource();
-      if (fallbackAudioRef.current) {
-        fallbackAudioRef.current.pause();
-        fallbackAudioRef.current.src = "";
-        fallbackAudioRef.current = null;
-      }
-      if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-        audioContextRef.current.close().catch(() => {});
-      }
-    };
-  }, [stopCurrentSource]);
-
-  const toggleMute = useCallback(() => {
-    initAudio();
-    setIsMuted((prev) => !prev);
-  }, [initAudio]);
+  }, [drawFrame]);
 
   return (
     <section
@@ -655,32 +455,6 @@ export function HeroScrollAnimation() {
               <span>Continue scrolling to view solutions</span>
               <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-bounce shrink-0" />
             </div>
-          </div>
-
-          {/* Audio Control */}
-          <div className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 pointer-events-auto">
-            <button
-              onClick={toggleMute}
-              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-              className="group flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:min-h-0 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-[11px] sm:text-xs font-medium cursor-pointer active:scale-95 shadow-lg"
-            >
-              {isMuted ? (
-                <>
-                  <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
-                  <span className="text-slate-400 group-hover:text-slate-200">Sound: Muted</span>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-0.5 h-3.5 sm:h-4">
-                    <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.8s_ease-in-out_infinite] h-3" : "h-1.5"}`} />
-                    <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_1.2s_ease-in-out_infinite_0.2s] h-4" : "h-2"}`} />
-                    <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.9s_ease-in-out_infinite_0.4s] h-2.5" : "h-1.5"}`} />
-                  </div>
-                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
-                  <span className="hidden xs:inline sm:inline text-cyan-300">Synchronized Audio</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>
