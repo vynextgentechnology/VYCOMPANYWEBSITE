@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown } from "lucide-react";
 
-const TOTAL_FRAMES = 159;
+const TOTAL_FRAMES = 200;
 const FRAME_PREFIX_DESKTOP = "/hero-frames/ezgif-frame-";
 const FRAME_PREFIX_MOBILE = "/hero-frames-mobile/ezgif-frame-";
 const FRAME_EXT = ".webp";
@@ -193,8 +193,8 @@ export function HeroScrollAnimation() {
       }
     }
 
-    const sourceW = 800;
-    const sourceH = 450;
+    const sourceW = isMob ? 960 : 1920;
+    const sourceH = isMob ? 540 : 1080;
     const scale = Math.max(targetW / sourceW, targetH / sourceH);
     const rw = sourceW * scale;
     const rh = sourceH * scale;
@@ -230,15 +230,52 @@ export function HeroScrollAnimation() {
     const timer = setTimeout(() => {
       preloadSurroundingFrames(0, "down");
       // Preload milestone keyframes so any fast scroll immediately finds a frame
-      [25, 50, 75, 100, 135, 170, 206].forEach((idx, i) => {
+      [25, 50, 75, 100, 125, 150, 175, 199].forEach((idx, i) => {
         setTimeout(() => {
           if (!isLoadedRef.current[idx]) loadSingleFrame(idx);
-        }, 80 + i * 50);
+        }, 80 + i * 40);
       });
-    }, 50);
+    }, 40);
 
     return () => clearTimeout(timer);
   }, [loadSingleFrame, preloadSurroundingFrames]);
+
+  // Smooth background prefetcher during browser idle time for zero-lag scrubbing
+  useEffect(() => {
+    let cancelled = false;
+    let nextIdx = 1;
+
+    const prefetchNext = () => {
+      if (cancelled || nextIdx >= TOTAL_FRAMES) return;
+
+      const batchSize = isMobileRef.current ? 2 : 4;
+      for (let b = 0; b < batchSize && nextIdx < TOTAL_FRAMES; b++) {
+        if (!isLoadedRef.current[nextIdx] && !loadingSetRef.current.has(nextIdx)) {
+          loadSingleFrame(nextIdx);
+        }
+        nextIdx++;
+      }
+
+      if (nextIdx < TOTAL_FRAMES && !cancelled) {
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+          (window as any).requestIdleCallback(
+            () => {
+              setTimeout(prefetchNext, isMobileRef.current ? 40 : 20);
+            },
+            { timeout: 800 }
+          );
+        } else {
+          setTimeout(prefetchNext, isMobileRef.current ? 60 : 30);
+        }
+      }
+    };
+
+    const startTimer = setTimeout(prefetchNext, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(startTimer);
+    };
+  }, [loadSingleFrame]);
 
   const updateOverlayStyles = useCallback((progress: number) => {
     if (headerRef.current) {
@@ -381,8 +418,8 @@ export function HeroScrollAnimation() {
       <div
         className="sticky top-0 w-full overflow-hidden"
         style={{
-          height: "100vh",
-          minHeight: "100vh",
+          height: "100dvh",
+          minHeight: "100dvh",
         }}
       >
         <div
@@ -397,8 +434,8 @@ export function HeroScrollAnimation() {
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100vw",
-              height: "100vh",
+              width: "100%",
+              height: "100%",
               backgroundColor: "#0c131a",
               transform: "translate3d(0, 0, 0)",
               willChange: "transform",
