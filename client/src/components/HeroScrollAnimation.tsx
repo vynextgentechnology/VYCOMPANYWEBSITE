@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { ChevronDown } from "lucide-react";
 
-const TOTAL_FRAMES = 207;
+const TOTAL_FRAMES = 159;
 const FRAME_PREFIX_DESKTOP = "/hero-frames/ezgif-frame-";
 const FRAME_PREFIX_MOBILE = "/hero-frames-mobile/ezgif-frame-";
-const FRAME_EXT = ".jpg";
+const FRAME_EXT = ".webp";
 
 export function HeroScrollAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -193,8 +193,8 @@ export function HeroScrollAnimation() {
       }
     }
 
-    const sourceW = isMob ? 800 : 1920;
-    const sourceH = isMob ? 450 : 1080;
+    const sourceW = 800;
+    const sourceH = 450;
     const scale = Math.max(targetW / sourceW, targetH / sourceH);
     const rw = sourceW * scale;
     const rh = sourceH * scale;
