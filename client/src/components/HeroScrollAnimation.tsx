@@ -1,208 +1,42 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { 
-  ChevronDown, 
-  Volume2, 
-  VolumeX, 
-  Code2, 
-  Receipt, 
-  Smartphone, 
-  Sparkles, 
-  ArrowRight, 
-  ShieldCheck, 
-  Zap,
-  Layers,
-  ArrowUpRight
-} from "lucide-react";
-import { Link } from "wouter";
+import { ChevronDown, Volume2, VolumeX } from "lucide-react";
 
 const TOTAL_FRAMES = 207;
-const FRAME_PREFIX = "/hero-frames/ezgif-frame-";
+const FRAME_PREFIX_DESKTOP = "/hero-frames/ezgif-frame-";
+const FRAME_PREFIX_MOBILE = "/hero-frames-mobile/ezgif-frame-";
 const FRAME_EXT = ".jpg";
 const AUDIO_URL = "/audio/hero-audio.mp3";
 const AUDIO_DURATION = 10.762;
 
-/**
- * Mobile-First High-Performance CSS 3D Hero
- * Eliminates 63MB image downloads and frame scrubbing lag on mobile devices.
- * Delivers instant 0ms First Paint, 120Hz native touch scrolling, and futuristic aesthetics.
- */
-function Mobile3DHero() {
-  const scrollToSolutions = () => {
-    const target = document.getElementById("services") || document.getElementById("solutions") || document.querySelector("section:nth-of-type(2)");
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth" });
-    } else {
-      window.scrollBy({ top: window.innerHeight * 0.9, behavior: "smooth" });
-    }
-  };
-
-  return (
-    <section
-      id="hero-section"
-      className="relative w-full min-h-[92dvh] flex flex-col justify-between bg-[#070d18] text-white overflow-hidden pt-12 pb-8 px-4"
-    >
-      {/* Background Cyber Grid & Glow Orbs */}
-      <div className="absolute inset-0 tech-grid-pattern-dark opacity-35 pointer-events-none" />
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-80 bg-cyan-500/15 rounded-full blur-[110px] pointer-events-none" />
-      <div className="absolute top-1/2 -right-20 w-72 h-72 bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" />
-
-      {/* Top Content */}
-      <div className="relative z-10 text-center max-w-md mx-auto mt-2">
-        {/* Glowing Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/40 shadow-lg shadow-cyan-950/60 mb-4 animate-fade-in">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
-          </span>
-          <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-cyan-300">
-            VY NEXTGEN TECHNOLOGIES
-          </span>
-        </div>
-
-        {/* Hero Title */}
-        <h1 className="text-3xl xs:text-4xl font-black tracking-tight text-white leading-[1.15] mb-3">
-          Architecting <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500">
-            Next-Gen Systems
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="text-xs xs:text-sm text-slate-300 leading-relaxed max-w-xs mx-auto mb-5 font-normal">
-          Enterprise Web Platforms • Cloud GST Billing • iOS & Android Ecosystems
-        </p>
-      </div>
-
-      {/* Centerpiece: Interactive CSS 3D Holographic Card */}
-      <div className="relative z-10 my-auto py-2 w-full max-w-sm mx-auto [perspective:1000px]">
-        <div 
-          className="relative rounded-2xl p-4 bg-gradient-to-br from-slate-900/95 via-slate-950/98 to-[#09152a] border border-cyan-500/40 shadow-[0_0_40px_rgba(6,182,212,0.2)] transition-all duration-300 [transform-style:preserve-3d] active:scale-[0.98]"
-          style={{
-            transform: "rotateX(2deg) rotateY(-2deg)",
-          }}
-        >
-          {/* Card Top Header */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-sm">
-                <Zap className="w-4 h-4 text-cyan-400" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white tracking-tight">Core Architecture</p>
-                <p className="text-[10px] text-cyan-400 font-mono">STATUS: OPTIMAL</p>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold font-mono">
-              99.9% UPTIME
-            </span>
-          </div>
-
-          {/* 3D Pillars Grid */}
-          <div className="space-y-2">
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Code2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span className="text-xs font-semibold text-slate-200">React & Next.js Platforms</span>
-              </div>
-              <span className="text-[10px] font-mono text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/30">
-                &lt;1s Load
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Receipt className="w-4 h-4 text-amber-400 shrink-0" />
-                <span className="text-xs font-semibold text-slate-200">Retail GST & POS Engine</span>
-              </div>
-              <span className="text-[10px] font-mono text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/30">
-                Offline Ready
-              </span>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Smartphone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-xs font-semibold text-slate-200">iOS & Android Apps</span>
-              </div>
-              <span className="text-[10px] font-mono text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-500/30">
-                Cross-Platform
-              </span>
-            </div>
-          </div>
-
-          {/* Micro Guarantee Tag */}
-          <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              100% Source Code Ownership
-            </span>
-            <span className="text-cyan-400 font-mono">Tamil Nadu & Global</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Action Buttons & Scroll Cue */}
-      <div className="relative z-10 w-full max-w-sm mx-auto space-y-3 mt-3">
-        {/* Buttons Row */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <button
-            type="button"
-            onClick={scrollToSolutions}
-            className="w-full min-h-[46px] rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-xs flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95 transition-all cursor-pointer"
-          >
-            <span>SOLUTIONS</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-          <Link href="/enquiry" className="w-full">
-            <button
-              type="button"
-              className="w-full min-h-[46px] rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
-            >
-              <span>GET QUOTE</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-cyan-400" />
-            </button>
-          </Link>
-        </div>
-
-        {/* Scroll Indicator */}
-        <button
-          type="button"
-          onClick={scrollToSolutions}
-          className="flex items-center justify-center gap-1.5 text-[10px] font-mono tracking-wider uppercase text-slate-400 hover:text-cyan-300 w-full py-1 cursor-pointer transition-colors"
-        >
-          <span>Scroll to explore</span>
-          <ChevronDown className="w-3 h-3 text-cyan-400 animate-bounce" />
-        </button>
-      </div>
-    </section>
-  );
-}
-
-/**
- * Desktop Hardware-Accelerated 2D Canvas Scrub Animation
- * Retained exclusively on desktop screens (>=768px) with zero frame eviction for silky 60fps scrubbing.
- */
-function DesktopCanvasHero() {
+export function HeroScrollAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const bottomCueRef = useRef<HTMLDivElement>(null);
 
-  // Cached frame images: loaded frames remain in memory to completely avoid re-fetching
+  // Viewport detection
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+  const isMobileRef = useRef<boolean>(isMobile);
+
+  // Frame image buffer: loaded frames remain in memory to eliminate re-fetching & GC stutter
   const imagesRef = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES).fill(null));
   const isLoadedRef = useRef<boolean[]>(new Array(TOTAL_FRAMES).fill(false));
   const loadingSetRef = useRef<Set<number>>(new Set());
   const nearestLoadedRef = useRef<number[]>(new Array(TOTAL_FRAMES).fill(0));
 
-  // Canvas dimensions & pre-computed cover geometry cache
+  // Canvas geometry cache
   const renderWRef = useRef<number>(0);
   const renderHRef = useRef<number>(0);
   const offsetXRef = useRef<number>(0);
   const offsetYRef = useRef<number>(0);
   const renderedFrameRef = useRef<number>(-1);
 
-  // Animation state
+  // Animation update state
   const targetProgressRef = useRef<number>(0);
   const currentProgressRef = useRef<number>(0);
   const isTickingRef = useRef<boolean>(false);
@@ -227,7 +61,9 @@ function DesktopCanvasHero() {
   const currentPlaybackRateRef = useRef<number>(1);
   const scrollStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isAudioLoadedRef = useRef<boolean>(false);
+  const fallbackAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Keep isMutedRef synchronized
   useEffect(() => {
     isMutedRef.current = isMuted;
     if (gainNodeRef.current && audioContextRef.current) {
@@ -238,13 +74,19 @@ function DesktopCanvasHero() {
         gainNodeRef.current.gain.setTargetAtTime(0.85, now, 0.08);
       }
     }
+    if (fallbackAudioRef.current) {
+      fallbackAudioRef.current.muted = isMuted;
+    }
   }, [isMuted]);
 
+  // Uses lightweight 36KB mobile frames on mobile, full master frames on desktop
   const getFrameUrl = useCallback((index: number) => {
     const frameNumber = String(index + 1).padStart(3, "0");
-    return `${FRAME_PREFIX}${frameNumber}${FRAME_EXT}`;
+    const prefix = isMobileRef.current ? FRAME_PREFIX_MOBILE : FRAME_PREFIX_DESKTOP;
+    return `${prefix}${frameNumber}${FRAME_EXT}`;
   }, []);
 
+  // Update nearest loaded frame lookup table
   const updateNearestLookup = useCallback((loadedIdx: number) => {
     const lookup = nearestLoadedRef.current;
     lookup[loadedIdx] = loadedIdx;
@@ -266,6 +108,7 @@ function DesktopCanvasHero() {
     }
   }, []);
 
+  // Hardware-accelerated direct canvas draw
   const drawFrame = useCallback((frameIdx: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -287,6 +130,7 @@ function DesktopCanvasHero() {
     renderedFrameRef.current = frameIdx;
   }, []);
 
+  // Asynchronous image loader with off-thread decode
   const loadSingleFrame = useCallback((idx: number): Promise<void> => {
     if (idx < 0 || idx >= TOTAL_FRAMES) return Promise.resolve();
     if (isLoadedRef.current[idx] && imagesRef.current[idx]) return Promise.resolve();
@@ -330,32 +174,45 @@ function DesktopCanvasHero() {
     });
   }, [getFrameUrl, updateNearestLookup, drawFrame]);
 
-  // Buffer manager: loads frames ahead & behind without evicting already loaded frames
-  const preloadSurroundingFrames = useCallback((centerIdx: number) => {
-    const bufAhead = 16;
-    const bufBehind = 10;
+  // Buffer manager: loads frames without evicting already loaded frames
+  const preloadSurroundingFrames = useCallback((centerIdx: number, direction: "down" | "up" = "down") => {
+    const isMob = isMobileRef.current;
+    const bufAhead = isMob ? 10 : 16;
+    const bufBehind = isMob ? 6 : 10;
+    const step = isMob ? 2 : 1;
+
     const start = Math.max(0, centerIdx - bufBehind);
     const end = Math.min(TOTAL_FRAMES - 1, centerIdx + bufAhead);
 
-    for (let i = centerIdx; i <= end; i++) {
-      if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) {
-        loadSingleFrame(i);
+    if (direction === "down") {
+      for (let i = centerIdx; i <= end; i += step) {
+        if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) loadSingleFrame(i);
+      }
+      for (let i = centerIdx - 1; i >= start; i--) {
+        if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) loadSingleFrame(i);
+      }
+    } else {
+      for (let i = centerIdx; i >= start; i -= step) {
+        if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) loadSingleFrame(i);
+      }
+      for (let i = centerIdx + 1; i <= end; i++) {
+        if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) loadSingleFrame(i);
       }
     }
-    for (let i = centerIdx - 1; i >= start; i--) {
-      if (!isLoadedRef.current[i] && !loadingSetRef.current.has(i)) {
-        loadSingleFrame(i);
-      }
-    }
+    // Loaded frames are retained in memory to avoid garbage collection stutter
   }, [loadSingleFrame]);
 
-  // Canvas geometry sizing
+  // Canvas geometry & fill-rate optimization
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Use native 1.0x - 1.5x DPR for optimal GPU fill-rate and zero lag
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const isMob = window.innerWidth < 768;
+    setIsMobile(isMob);
+    isMobileRef.current = isMob;
+
+    // Optimized DPR: 1.1x on mobile, 1.5x on desktop for high fill-rate efficiency without lag
+    const dpr = isMob ? Math.min(window.devicePixelRatio || 1, 1.15) : Math.min(window.devicePixelRatio || 1, 1.5);
     const displayW = window.innerWidth;
     const displayH = window.innerHeight;
     const targetW = Math.round(displayW * dpr);
@@ -368,12 +225,12 @@ function DesktopCanvasHero() {
       const ctx = canvas.getContext("2d", { alpha: false });
       if (ctx) {
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "medium";
+        ctx.imageSmoothingQuality = isMob ? "medium" : "high";
       }
     }
 
-    const sourceW = 1920;
-    const sourceH = 1080;
+    const sourceW = isMob ? 800 : 1920;
+    const sourceH = isMob ? 450 : 1080;
     const scale = Math.max(targetW / sourceW, targetH / sourceH);
     const rw = sourceW * scale;
     const rh = sourceH * scale;
@@ -394,9 +251,11 @@ function DesktopCanvasHero() {
       resizeTimer = setTimeout(resizeCanvas, 80);
     };
     window.addEventListener("resize", handleResize, { passive: true });
+    window.addEventListener("orientationchange", handleResize, { passive: true });
     return () => {
       clearTimeout(resizeTimer);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
     };
   }, [resizeCanvas]);
 
@@ -405,14 +264,14 @@ function DesktopCanvasHero() {
     loadSingleFrame(0);
 
     const timer = setTimeout(() => {
-      preloadSurroundingFrames(0);
-      // Key milestone preloading for instant scrub responsiveness
+      preloadSurroundingFrames(0, "down");
+      // Preload milestone keyframes so any fast scroll immediately finds a frame
       [25, 50, 75, 100, 135, 170, 206].forEach((idx, i) => {
         setTimeout(() => {
           if (!isLoadedRef.current[idx]) loadSingleFrame(idx);
-        }, 100 + i * 50);
+        }, 80 + i * 50);
       });
-    }, 60);
+    }, 50);
 
     return () => clearTimeout(timer);
   }, [loadSingleFrame, preloadSurroundingFrames]);
@@ -478,6 +337,9 @@ function DesktopCanvasHero() {
       } catch {}
       activeSourceRef.current = null;
       activeDirectionRef.current = null;
+    }
+    if (fallbackAudioRef.current && !fallbackAudioRef.current.paused) {
+      fallbackAudioRef.current.pause();
     }
   }, []);
 
@@ -569,14 +431,17 @@ function DesktopCanvasHero() {
       return;
     }
 
+    const isMob = isMobileRef.current;
     const targetProgress = targetProgressRef.current;
     let currentProgress = currentProgressRef.current;
     const diff = targetProgress - currentProgress;
 
-    if (Math.abs(diff) > 0.15) {
+    // Mobile uses instant 0.40 catch-up for 1:1 thumb responsiveness; Desktop uses smooth 0.20 glide
+    const catchup = isMob ? 0.40 : 0.20;
+    if (Math.abs(diff) > (isMob ? 0.08 : 0.14)) {
       currentProgress = targetProgress;
     } else {
-      currentProgress += diff * 0.22;
+      currentProgress += diff * catchup;
     }
 
     currentProgressRef.current = currentProgress;
@@ -584,7 +449,7 @@ function DesktopCanvasHero() {
     const frameToDraw = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1))));
     const isScrollingDown = currentProgress >= lastScrollProgressRef.current;
 
-    preloadSurroundingFrames(frameToDraw);
+    preloadSurroundingFrames(frameToDraw, isScrollingDown ? "down" : "up");
 
     if (frameToDraw !== renderedFrameRef.current) {
       drawFrame(frameToDraw);
@@ -644,21 +509,21 @@ function DesktopCanvasHero() {
 
   useEffect(() => {
     const lenis = (window as any).__lenis;
-    if (lenis) {
+    if (lenis && !isMobile) {
       lenis.on("scroll", onScroll);
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
     return () => {
-      if (lenis) {
+      if (lenis && !isMobile) {
         lenis.off("scroll", onScroll);
       }
       window.removeEventListener("scroll", onScroll);
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       if (scrollStopTimerRef.current) clearTimeout(scrollStopTimerRef.current);
     };
-  }, [onScroll]);
+  }, [isMobile, onScroll]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -687,6 +552,11 @@ function DesktopCanvasHero() {
   useEffect(() => {
     return () => {
       stopCurrentSource();
+      if (fallbackAudioRef.current) {
+        fallbackAudioRef.current.pause();
+        fallbackAudioRef.current.src = "";
+        fallbackAudioRef.current = null;
+      }
       if (audioContextRef.current && audioContextRef.current.state !== "closed") {
         audioContextRef.current.close().catch(() => {});
       }
@@ -704,7 +574,8 @@ function DesktopCanvasHero() {
       id="hero-section"
       className="relative w-full bg-[#0c131a]"
       style={{
-        height: "360vh",
+        /* Balanced scroll height: 220vh on mobile (~2 natural thumb swipes), 360vh on desktop */
+        height: isMobile ? "220vh" : "360vh",
       }}
     >
       <div
@@ -718,6 +589,7 @@ function DesktopCanvasHero() {
           className="absolute inset-0"
           style={{ transform: "translate3d(0, 0, 0)", willChange: "transform" }}
         >
+          {/* Hardware-Accelerated 2D Canvas Scrub (Both Mobile & Desktop) */}
           <canvas
             ref={canvasRef}
             className="select-none pointer-events-none z-0"
@@ -740,18 +612,18 @@ function DesktopCanvasHero() {
             style={{ willChange: "opacity, transform" }}
           >
             <div className="max-w-3xl text-center pointer-events-auto px-2">
-              <span className="inline-block text-xs uppercase tracking-[0.25em] font-semibold text-cyan-300 mb-3 bg-slate-900/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg">
+              <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] font-semibold text-cyan-300 mb-2.5 sm:mb-3 bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg">
                 VY NextGen Technologies
               </span>
 
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-3 sm:mb-4 leading-tight">
                 Architecting <br className="hidden sm:inline" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500">
                   Next-Gen Systems
                 </span>
               </h1>
 
-              <p className="text-base md:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed mb-6">
+              <p className="text-xs sm:text-base md:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed mb-5 sm:mb-6">
                 Web Platforms • Mobile Ecosystems • Cloud GST Billing
               </p>
 
@@ -765,7 +637,7 @@ function DesktopCanvasHero() {
                     window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
                   }
                 }}
-                className="flex items-center justify-center gap-1.5 text-xs font-semibold text-cyan-300 tracking-wider uppercase bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full w-fit mx-auto border border-cyan-500/30 cursor-pointer active:scale-95 transition-transform shadow-md hover:border-cyan-400 hover:text-white"
+                className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 tracking-wider uppercase bg-slate-900/90 sm:bg-slate-900/70 sm:backdrop-blur-sm px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit mx-auto border border-cyan-500/30 cursor-pointer active:scale-95 transition-transform shadow-md hover:border-cyan-400 hover:text-white"
               >
                 <span>Scroll to explore</span>
                 <ChevronDown className="w-3.5 h-3.5 animate-bounce text-cyan-400" />
@@ -776,36 +648,36 @@ function DesktopCanvasHero() {
           {/* End of Hero Scroll Cue */}
           <div
             ref={bottomCueRef}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 text-center hidden"
+            className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 w-full max-w-xs sm:max-w-none text-center hidden"
             style={{ willChange: "opacity" }}
           >
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-950/85 backdrop-blur-xl border border-cyan-500/30 text-white text-xs font-medium shadow-2xl">
+            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-950/90 sm:bg-slate-950/85 sm:backdrop-blur-xl border border-cyan-500/30 text-white text-[11px] sm:text-xs font-medium shadow-2xl">
               <span>Continue scrolling to view solutions</span>
-              <ChevronDown className="w-4 h-4 text-cyan-400 animate-bounce shrink-0" />
+              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-bounce shrink-0" />
             </div>
           </div>
 
           {/* Audio Control */}
-          <div className="absolute bottom-6 right-6 z-30 pointer-events-auto">
+          <div className="absolute bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 pointer-events-auto">
             <button
               onClick={toggleMute}
               aria-label={isMuted ? "Unmute audio" : "Mute audio"}
-              className="group flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-900/80 backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-xs font-medium cursor-pointer active:scale-95 shadow-lg"
+              className="group flex items-center gap-2 min-h-[44px] px-3.5 py-2 sm:min-h-0 sm:px-3.5 sm:py-2 rounded-full bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white transition-colors text-[11px] sm:text-xs font-medium cursor-pointer active:scale-95 shadow-lg"
             >
               {isMuted ? (
                 <>
-                  <VolumeX className="w-4 h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
+                  <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
                   <span className="text-slate-400 group-hover:text-slate-200">Sound: Muted</span>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-0.5 h-4">
+                  <div className="flex items-center gap-0.5 h-3.5 sm:h-4">
                     <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.8s_ease-in-out_infinite] h-3" : "h-1.5"}`} />
                     <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_1.2s_ease-in-out_infinite_0.2s] h-4" : "h-2"}`} />
                     <span className={`w-0.5 bg-cyan-400 rounded-full transition-all ${isAudioActive ? "animate-[pulse_0.9s_ease-in-out_infinite_0.4s] h-2.5" : "h-1.5"}`} />
                   </div>
-                  <Volume2 className="w-4 h-4 text-cyan-400" />
-                  <span className="text-cyan-300">Synchronized Audio</span>
+                  <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" />
+                  <span className="hidden xs:inline sm:inline text-cyan-300">Synchronized Audio</span>
                 </>
               )}
             </button>
@@ -814,32 +686,4 @@ function DesktopCanvasHero() {
       </div>
     </section>
   );
-}
-
-/**
- * Responsive Hero Section Controller
- * Seamlessly routes Mobile (<768px) to the lightweight, zero-lag 3D Hero,
- * and Desktop (>=768px) to the high-frame-rate canvas scrubber.
- */
-export function HeroScrollAnimation() {
-  const [isMobile, setIsMobile] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth < 768;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener("resize", handleResize, { passive: true });
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  if (isMobile) {
-    return <Mobile3DHero />;
-  }
-
-  return <DesktopCanvasHero />;
 }
