@@ -32,15 +32,21 @@ export function Navigation() {
   }, []);
 
   const isHome = location === "/";
-  const showNav = !isHome || isPastHero;
+  const [isAtHeroTop, setIsAtHeroTop] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const scrollY = window.scrollY;
+      setIsScrolled(scrollY > 20);
+      setIsAtHeroTop(scrollY <= 30);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Header is visible transparent at the start, disappears once animation starts, and reappears in the last past hero
+  const showNav = !isHome || isAtHeroTop || isPastHero;
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -104,7 +110,7 @@ export function Navigation() {
               isHome
                 ? isScrolled
                   ? "bg-slate-950/90 backdrop-blur-xl shadow-2xl border-b border-cyan-500/30 py-3.5"
-                  : "bg-slate-950/60 backdrop-blur-md py-4 border-b border-cyan-500/10"
+                  : "bg-transparent py-5 border-b border-transparent"
                 : isScrolled
                   ? "bg-white/90 backdrop-blur-xl shadow-md border-b border-slate-100 py-3.5"
                   : "bg-white/70 backdrop-blur-md py-5"
