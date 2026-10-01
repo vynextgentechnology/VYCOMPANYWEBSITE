@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowRight } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 const TOTAL_FRAMES = 200;
 const FRAME_PREFIX_DESKTOP = "/hero-frames/ezgif-frame-";
@@ -10,6 +13,8 @@ export function HeroScrollAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+  const endContentRef = useRef<HTMLDivElement>(null);
+  const dimOverlayRef = useRef<HTMLDivElement>(null);
   const bottomCueRef = useRef<HTMLDivElement>(null);
 
   // Viewport detection
@@ -293,6 +298,32 @@ export function HeroScrollAnimation() {
       }
     }
 
+    if (endContentRef.current) {
+      if (progress >= 0.58) {
+        // Pop-out scroll-driven entrance animation between 0.58 and 0.88
+        const popProgress = Math.min(1, Math.max(0, (progress - 0.58) / 0.30));
+        const scale = 0.68 + popProgress * 0.32;
+        const translateY = Math.round((1 - popProgress) * 55);
+        const opacity = Math.min(1, popProgress * 1.35);
+
+        endContentRef.current.style.opacity = String(opacity);
+        endContentRef.current.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
+        endContentRef.current.style.pointerEvents = popProgress > 0.4 ? "auto" : "none";
+        endContentRef.current.style.display = popProgress > 0.01 ? "flex" : "none";
+
+        if (dimOverlayRef.current) {
+          dimOverlayRef.current.style.opacity = String(popProgress * 0.85);
+        }
+      } else {
+        endContentRef.current.style.opacity = "0";
+        endContentRef.current.style.pointerEvents = "none";
+        endContentRef.current.style.display = "none";
+        if (dimOverlayRef.current) {
+          dimOverlayRef.current.style.opacity = "0";
+        }
+      }
+    }
+
     if (bottomCueRef.current) {
       if (progress >= 0.85) {
         const opacity = Math.min(1, (progress - 0.85) * 8);
@@ -328,7 +359,9 @@ export function HeroScrollAnimation() {
 
     currentProgressRef.current = currentProgress;
 
-    const frameToDraw = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1))));
+    // Robot scrub completes smoothly by 0.68 of scroll track, reserving remaining track for pop-out reveal
+    const animProgress = Math.min(1, Math.max(0, currentProgress / 0.68));
+    const frameToDraw = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(animProgress * (TOTAL_FRAMES - 1))));
     const isScrollingDown = currentProgress >= lastScrollProgressRef.current;
 
     preloadSurroundingFrames(frameToDraw, isScrollingDown ? "down" : "up");
@@ -411,8 +444,8 @@ export function HeroScrollAnimation() {
       id="hero-section"
       className="relative w-full bg-[#0c131a]"
       style={{
-        /* Balanced scroll height: 220vh on mobile (~2 natural thumb swipes), 360vh on desktop */
-        height: isMobile ? "220vh" : "360vh",
+        /* Balanced scroll height: 260vh on mobile, 360vh on desktop for smooth animation and pop-out reveal */
+        height: isMobile ? "260vh" : "360vh",
       }}
     >
       <div
@@ -467,18 +500,92 @@ export function HeroScrollAnimation() {
               <button
                 type="button"
                 onClick={() => {
-                  const target = document.getElementById("services") || document.querySelector("section:nth-of-type(2)");
-                  if (target) {
-                    target.scrollIntoView({ behavior: "smooth" });
-                  } else {
-                    window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
-                  }
+                  window.scrollBy({ top: window.innerHeight * 1.5, behavior: "smooth" });
                 }}
                 className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 tracking-wider uppercase bg-slate-900/90 sm:bg-slate-900/70 sm:backdrop-blur-sm px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit mx-auto border border-cyan-500/30 cursor-pointer active:scale-95 transition-transform shadow-md hover:border-cyan-400 hover:text-white"
               >
                 <span>Scroll to explore</span>
                 <ChevronDown className="w-3.5 h-3.5 animate-bounce text-cyan-400" />
               </button>
+            </div>
+          </div>
+
+          {/* Ending Pop-Out CTA Section (Emerges directly at the ending of the robot animation) */}
+          <div
+            ref={endContentRef}
+            id="ready-to-build"
+            className="absolute inset-0 z-30 flex items-center justify-center px-4 pointer-events-none"
+            style={{
+              opacity: 0,
+              transform: "translate3d(0, 55px, 0) scale(0.68)",
+              willChange: "opacity, transform",
+              display: "none",
+            }}
+          >
+            {/* Soft dark vignette behind the pop-out card */}
+            <div
+              ref={dimOverlayRef}
+              className="absolute inset-0 bg-slate-950/80 pointer-events-none transition-opacity duration-300 backdrop-blur-[2px]"
+              style={{ opacity: 0 }}
+            />
+
+            {/* Ambient Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[300px] bg-gradient-to-r from-blue-600/20 via-cyan-500/25 to-blue-600/20 blur-3xl rounded-full pointer-events-none" />
+
+            {/* Pop-Out Tech Card Content */}
+            <div className="relative z-10 w-full max-w-3xl text-center pointer-events-auto px-4 py-8 flex flex-col items-center">
+              {/* Badge */}
+              <span className="inline-flex items-center text-[10px] sm:text-xs uppercase tracking-widest font-mono font-bold text-cyan-400 mb-5 bg-cyan-950/70 border border-cyan-500/40 px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.3)]">
+                START YOUR TRANSFORMATION
+              </span>
+
+              {/* Heading with Glowing Radar Beacon Dots */}
+              <div className="relative inline-block mb-5">
+                <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-tight">
+                  Ready to Build Your Next-Gen <br className="hidden sm:inline" />
+                  System?
+                </h2>
+
+                {/* Glowing Cyan Radar Beacon below System? */}
+                <span className="absolute -bottom-4 left-1/2 -translate-x-5 flex h-7 w-7 items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-950/60 shadow-[0_0_18px_rgba(6,182,212,0.45)]">
+                  <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+                </span>
+
+                {/* Glowing Cyan Radar Beacon to the right */}
+                <span className="absolute bottom-2 -right-7 sm:-right-9 flex h-7 w-7 items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-950/60 shadow-[0_0_18px_rgba(6,182,212,0.45)]">
+                  <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300 shadow-[0_0_8px_#38bdf8]" />
+                </span>
+              </div>
+
+              {/* Subtitle */}
+              <p className="text-slate-300 text-sm sm:text-base md:text-lg mb-8 max-w-xl mx-auto leading-relaxed font-normal">
+                From high-speed web platforms to retail billing software and talent training, our engineering team is ready to deliver.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                <Link href="/enquiry" className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto h-12 min-h-[48px] px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-[0_10px_30px_rgba(37,99,235,0.45)] hover:shadow-[0_15px_40px_rgba(37,99,235,0.7)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer group">
+                    <span>Contact Engineering Team</span>
+                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </Link>
+                <a
+                  href="https://wa.me/918754020556"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto h-12 min-h-[48px] px-8 rounded-full border border-emerald-500/60 bg-emerald-950/30 text-emerald-400 hover:bg-emerald-950/60 hover:border-emerald-400 text-sm font-semibold hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.18)]"
+                  >
+                    <FaWhatsapp className="mr-2 w-4 h-4 text-emerald-400" /> Chat on WhatsApp
+                  </Button>
+                </a>
+              </div>
             </div>
           </div>
 
