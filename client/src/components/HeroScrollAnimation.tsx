@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { ArrowRight } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 
 const TOTAL_FRAMES = 200;
 const FRAME_PREFIX_DESKTOP = "/hero-frames/ezgif-frame-";
@@ -13,8 +10,7 @@ export function HeroScrollAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
-  const endContentRef = useRef<HTMLDivElement>(null);
-  const dimOverlayRef = useRef<HTMLDivElement>(null);
+  const bottomCueRef = useRef<HTMLDivElement>(null);
 
   // Viewport detection
   const [isMobile, setIsMobile] = useState<boolean>(() => {
@@ -82,14 +78,13 @@ export function HeroScrollAnimation() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d", { alpha: true });
+    const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
 
     const actualIdx = nearestLoadedRef.current[frameIdx] ?? 0;
     const img = imagesRef.current[actualIdx];
     if (!img || !img.complete || img.naturalWidth === 0) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(
       img,
       offsetXRef.current,
@@ -298,29 +293,16 @@ export function HeroScrollAnimation() {
       }
     }
 
-    if (endContentRef.current) {
-      if (progress >= 0.64) {
-        // Pop-out scroll-driven entrance animation between 0.64 and 0.92
-        const popProgress = Math.min(1, Math.max(0, (progress - 0.64) / 0.28));
-        const scale = 0.68 + popProgress * 0.32;
-        const translateY = Math.round((1 - popProgress) * 55);
-        const opacity = Math.min(1, popProgress * 1.35);
-
-        endContentRef.current.style.opacity = String(opacity);
-        endContentRef.current.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale})`;
-        endContentRef.current.style.pointerEvents = popProgress > 0.3 ? "auto" : "none";
-        endContentRef.current.style.display = "flex";
-
-        if (dimOverlayRef.current) {
-          dimOverlayRef.current.style.opacity = String(popProgress * 0.72);
-        }
+    if (bottomCueRef.current) {
+      if (progress >= 0.85) {
+        const opacity = Math.min(1, (progress - 0.85) * 8);
+        bottomCueRef.current.style.opacity = String(opacity);
+        bottomCueRef.current.style.pointerEvents = opacity > 0.1 ? "auto" : "none";
+        bottomCueRef.current.style.display = "block";
       } else {
-        endContentRef.current.style.opacity = "0";
-        endContentRef.current.style.pointerEvents = "none";
-        endContentRef.current.style.display = "none";
-        if (dimOverlayRef.current) {
-          dimOverlayRef.current.style.opacity = "0";
-        }
+        bottomCueRef.current.style.opacity = "0";
+        bottomCueRef.current.style.pointerEvents = "none";
+        bottomCueRef.current.style.display = "none";
       }
     }
   }, []);
@@ -344,9 +326,9 @@ export function HeroScrollAnimation() {
       currentProgress += diff * catchup;
     }
 
-    // Robot scrub completes smoothly by 0.68 of scroll track, reserving remaining track for pop-out reveal
-    const animProgress = Math.min(1, Math.max(0, currentProgress / 0.68));
-    const frameToDraw = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(animProgress * (TOTAL_FRAMES - 1))));
+    currentProgressRef.current = currentProgress;
+
+    const frameToDraw = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(currentProgress * (TOTAL_FRAMES - 1))));
     const isScrollingDown = currentProgress >= lastScrollProgressRef.current;
 
     preloadSurroundingFrames(frameToDraw, isScrollingDown ? "down" : "up");
@@ -427,10 +409,10 @@ export function HeroScrollAnimation() {
     <section
       ref={containerRef}
       id="hero-section"
-      className="relative w-full bg-transparent"
+      className="relative w-full bg-[#0c131a]"
       style={{
-        /* Balanced scroll height: 260vh on mobile, 360vh on desktop for smooth animation and pop-out reveal */
-        height: isMobile ? "260vh" : "360vh",
+        /* Balanced scroll height: 220vh on mobile (~2 natural thumb swipes), 360vh on desktop */
+        height: isMobile ? "220vh" : "360vh",
       }}
     >
       <div
@@ -454,7 +436,7 @@ export function HeroScrollAnimation() {
               left: 0,
               width: "100%",
               height: "100%",
-              backgroundColor: "transparent",
+              backgroundColor: "#0c131a",
               transform: "translate3d(0, 0, 0)",
               willChange: "transform",
             }}
@@ -467,7 +449,7 @@ export function HeroScrollAnimation() {
             style={{ willChange: "opacity, transform" }}
           >
             <div className="max-w-3xl text-center pointer-events-auto px-2">
-              <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] font-semibold text-cyan-300 mb-2.5 sm:mb-3 bg-slate-900/90 sm:bg-slate-900/80 px-3 sm:px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg">
+              <span className="inline-block text-[11px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.25em] font-semibold text-cyan-300 mb-2.5 sm:mb-3 bg-slate-900/90 sm:bg-slate-900/80 sm:backdrop-blur-md px-3 sm:px-4 py-1.5 rounded-full border border-cyan-500/30 shadow-lg">
                 VY NextGen Technologies
               </span>
 
@@ -478,87 +460,37 @@ export function HeroScrollAnimation() {
                 </span>
               </h1>
 
-              <p className="text-xs sm:text-base md:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed">
+              <p className="text-xs sm:text-base md:text-lg text-slate-300 max-w-xl mx-auto font-normal leading-relaxed mb-5 sm:mb-6">
                 Web Platforms • Mobile Ecosystems • Cloud GST Billing
               </p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const target = document.getElementById("services") || document.querySelector("section:nth-of-type(2)");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
+                  } else {
+                    window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
+                  }
+                }}
+                className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs font-semibold text-cyan-300 tracking-wider uppercase bg-slate-900/90 sm:bg-slate-900/70 sm:backdrop-blur-sm px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full w-fit mx-auto border border-cyan-500/30 cursor-pointer active:scale-95 transition-transform shadow-md hover:border-cyan-400 hover:text-white"
+              >
+                <span>Scroll to explore</span>
+                <ChevronDown className="w-3.5 h-3.5 animate-bounce text-cyan-400" />
+              </button>
             </div>
           </div>
 
-          {/* Ending Pop-Out Section (Remaining Content Revealed on Scroll from the Ending Frame) */}
+          {/* End of Hero Scroll Cue */}
           <div
-            ref={endContentRef}
-            id="ready-to-build"
-            className="absolute inset-0 z-30 flex items-center justify-center px-4 pointer-events-none"
-            style={{
-              opacity: 0,
-              transform: "translate3d(0, 55px, 0) scale(0.68)",
-              willChange: "opacity, transform",
-              display: "none",
-            }}
+            ref={bottomCueRef}
+            className="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-3 w-full max-w-xs sm:max-w-none text-center hidden"
+            style={{ willChange: "opacity" }}
           >
-            {/* Soft dark vignette behind the pop-out card to ensure high contrast against the robot chest glow */}
-            <div
-              ref={dimOverlayRef}
-              className="absolute inset-0 bg-slate-950/75 pointer-events-none transition-opacity duration-300"
-              style={{ opacity: 0 }}
-            />
-
-            {/* Pop-Out Tech Card */}
-            <div className="relative z-10 w-full max-w-2xl text-center pointer-events-auto bg-slate-950/90 border border-cyan-500/40 rounded-3xl p-5 sm:p-8 md:p-9 max-h-[88dvh] overflow-y-auto sm:overflow-visible overscroll-contain shadow-[0_0_60px_rgba(6,182,212,0.25)]">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-teal-500/20 rounded-3xl blur-xl -z-10" />
-
-              <span className="inline-block text-[10px] sm:text-xs uppercase tracking-widest font-mono font-bold text-cyan-400 mb-3 bg-cyan-950/80 border border-cyan-500/40 px-3.5 py-1.5 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                START YOUR TRANSFORMATION
-              </span>
-
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-3 sm:mb-4">
-                Ready to Build Your{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-500">
-                  Next-Gen System?
-                </span>
-              </h2>
-
-              <p className="text-slate-300 text-xs sm:text-sm md:text-base mb-6 sm:mb-8 max-w-lg mx-auto leading-relaxed">
-                From high-speed web platforms to retail billing software and talent training, our engineering team is ready to deliver.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full">
-                <Link href="/enquiry" className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto h-11 sm:h-12 min-h-[44px] px-6 sm:px-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-blue-500/30 cursor-pointer">
-                    <span>Contact Engineering Team</span>
-                    <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </Link>
-                <a
-                  href="https://wa.me/918754020556"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto h-11 sm:h-12 min-h-[44px] px-6 sm:px-8 rounded-full border-emerald-500/50 bg-slate-900/80 text-emerald-400 hover:bg-emerald-950/60 text-xs sm:text-sm font-semibold cursor-pointer"
-                  >
-                    <FaWhatsapp className="mr-2 w-4 h-4" /> Chat on WhatsApp
-                  </Button>
-                </a>
-              </div>
-
-              {/* Down: Next page to About Us */}
-              <div className="mt-7 pt-5 border-t border-slate-800/80 flex flex-col items-center">
-                <span className="text-[10px] sm:text-xs uppercase tracking-widest font-mono text-slate-400 mb-2">
-                  Next Page
-                </span>
-                <Link href="/about">
-                  <Button
-                    variant="outline"
-                    className="h-10 sm:h-12 min-h-[40px] px-6 sm:px-8 rounded-full border-cyan-500/40 bg-slate-900/90 text-cyan-300 hover:bg-cyan-950/60 hover:text-white hover:border-cyan-400 font-bold text-xs sm:text-sm shadow-lg shadow-cyan-950/40 group cursor-pointer"
-                  >
-                    <span>About Us & Leadership</span>
-                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </Link>
-              </div>
+            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-slate-950/90 sm:bg-slate-950/85 sm:backdrop-blur-xl border border-cyan-500/30 text-white text-[11px] sm:text-xs font-medium shadow-2xl">
+              <span>Continue scrolling to view solutions</span>
+              <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 animate-bounce shrink-0" />
             </div>
           </div>
         </div>

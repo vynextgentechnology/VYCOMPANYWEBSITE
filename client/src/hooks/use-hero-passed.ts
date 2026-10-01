@@ -20,10 +20,8 @@ export function useIsPastHero() {
       const heroEl = document.getElementById("hero-section");
       if (heroEl) {
         const rect = heroEl.getBoundingClientRect();
-        const scrollableDist = rect.height - window.innerHeight;
-        const progress = scrollableDist > 0 ? Math.min(1, Math.max(0, -rect.top / scrollableDist)) : 0;
-        // Reveal navigation when reaching the ending phase where remaining content pops out
-        setIsPastHero(progress >= 0.65 || rect.bottom <= window.innerHeight * 1.05);
+        // Reveal navigation when reaching the end of the 3D robot scrub
+        setIsPastHero(rect.bottom <= window.innerHeight * 1.05);
       } else {
         setIsPastHero(window.scrollY > (window.innerWidth < 768 ? 800 : 1500));
       }

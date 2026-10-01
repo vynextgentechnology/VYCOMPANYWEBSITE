@@ -4,6 +4,7 @@ import {
   Mail, 
   MapPin, 
   Clock, 
+  ArrowUpRight, 
   ShieldCheck, 
   Linkedin,
   Instagram,
@@ -22,7 +23,7 @@ export function Footer() {
       <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[150px] bg-blue-500/10 blur-[100px] pointer-events-none rounded-full" />
 
       <div className="container mx-auto px-4 lg:px-8 pt-16 pb-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-20 pb-12 border-b border-slate-800/80 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-800/80">
           
           {/* Brand & About Column */}
           <div className="space-y-5">
@@ -95,8 +96,86 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Column 2: Contact & Office */}
-          <div className="space-y-4 md:max-w-xs md:ml-auto">
+          {/* Column 2: IT Solutions */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+              IT Solutions
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/web-development" className="hover:text-cyan-400 transition-colors inline-flex items-center gap-1 group">
+                  <span>Custom Web Development</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/web-development" className="hover:text-cyan-400 transition-colors inline-flex items-center gap-1 group">
+                  <span>Mobile Apps (iOS & Android)</span>
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link href="/billing-software" className="hover:text-cyan-400 transition-colors inline-flex items-center gap-1 group">
+                  <span>Billing & GST Software</span>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-mono">Popular</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/web-development" className="hover:text-cyan-400 transition-colors">
+                  E-Commerce & Online Stores
+                </Link>
+              </li>
+              <li>
+                <Link href="/web-development" className="hover:text-cyan-400 transition-colors">
+                  UI/UX & Product Design
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Company & Academy */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+              Company & Academy
+            </h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/about" className="hover:text-cyan-400 transition-colors">
+                  About Our Company
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-cyan-400 transition-colors">
+                  Executive Leadership Team
+                </Link>
+              </li>
+              <li>
+                <Link href="/internship" className="hover:text-cyan-400 transition-colors inline-flex items-center gap-1 group">
+                  <span>Tech Internship Program</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono">Open</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/careers" className="hover:text-cyan-400 transition-colors inline-flex items-center gap-1 group">
+                  <span>Careers & Job Openings</span>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-mono">Hiring</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/web-development" className="hover:text-cyan-400 transition-colors">
+                  Development Packages
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-cyan-400 transition-colors">
+                  Contact & Consultation
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Contact & Office */}
+          <div className="space-y-4">
             <h4 className="text-sm font-bold text-white uppercase tracking-wider">
               Headquarters
             </h4>
