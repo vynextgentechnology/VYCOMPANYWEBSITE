@@ -6,6 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
+import { CinematicHero, CINEMATIC_SCENES } from "@/components/cinematic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -175,57 +176,8 @@ export default function Internship() {
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-emerald-500/20">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden">
-        <div className="absolute inset-0 tech-grid-pattern-dark opacity-25" />
-        <div className="absolute -top-32 right-10 w-96 h-96 bg-emerald-500/20 rounded-full blur-[130px]" />
-        <div className="absolute bottom-0 left-10 w-96 h-96 bg-blue-500/20 rounded-full blur-[120px]" />
-
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider mb-6">
-                <Sparkles className="w-3.5 h-3.5" />
-                Admissions Open for Next Cohort
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6 text-white">
-                <span className="text-white">Launch Your Tech Career With Our</span>{" "}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400">
-                  1-Month IT Internship
-                </span>
-              </h1>
-
-
-              <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto">
-                Gain real-world experience, build production full-stack apps, receive 1-on-1 industry mentorship, and earn recognized credentials.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#apply-now" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5">
-                    Apply Now <ArrowRight className="ml-2 w-4 h-4" />
-                  </Button>
-                </a>
-                <a
-                  href="https://forms.gle/skWDWMTWipZjRf8U6"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-12 min-h-[48px] border-slate-700 bg-slate-800/60 text-slate-200 hover:bg-slate-800 font-bold">
-                    Official Google Form <ExternalLink className="ml-2 w-4 h-4 text-emerald-400" />
-                  </Button>
-                </a>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      {/* Cinematic Future Technology Lab Hero */}
+      <CinematicHero scene={CINEMATIC_SCENES.internship} />
 
       {/* Highlights Bar */}
       <section className="bg-white border-y border-slate-200 py-6">

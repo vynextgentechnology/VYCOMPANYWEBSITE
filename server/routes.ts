@@ -76,6 +76,19 @@ export async function registerRoutes(
     }
   });
 
+  // Direct File Download Route (Company Brochure / Profile)
+  app.get("/api/download/brochure", (_req, res) => {
+    const filename = "VY-NextGen-Technologies-Brochure.pdf";
+    const samplePdfContent = Buffer.from(
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f\n0000000009 00000 n\n0000000052 00000 n\n0000000101 00000 n\ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF\n"
+    );
+
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Length", samplePdfContent.length.toString());
+    res.status(200).send(samplePdfContent);
+  });
+
   return httpServer;
 }
 

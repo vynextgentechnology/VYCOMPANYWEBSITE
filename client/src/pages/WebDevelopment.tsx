@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
+import { CinematicHero, CINEMATIC_SCENES } from "@/components/cinematic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -141,50 +142,8 @@ export default function WebDevelopment() {
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-600/10">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden">
-        <div className="absolute inset-0 tech-grid-pattern-dark opacity-25" />
-        <div className="absolute -top-40 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[130px]" />
-        
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 text-center max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/30 text-cyan-300 text-xs font-bold uppercase tracking-wider mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
-              Full-Stack Web & Mobile Engineering
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6 text-white">
-              <span className="text-white">Build Your High-Performance</span>{" "}
-              <span className="text-gradient-cyan">Website & App</span>
-            </h1>
-
-            <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-2xl mx-auto">
-              We design and develop custom websites, web portals, and mobile applications engineered for high conversion, lightning-fast speeds, and flawless mobile experiences.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/enquiry">
-                <Button size="lg" className="rounded-full px-8 h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30">
-                  Submit Project Enquiry <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </Link>
-              <a
-                href="https://wa.me/918754020556?text=Hello%20VY%20NextGen%20Technology,%20I%20would%20like%20to%20order%20a%20website/app%20project."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline" size="lg" className="rounded-full px-8 h-12 border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/40 font-bold">
-                  <FaWhatsapp className="mr-2 w-5 h-5 text-emerald-400" /> WhatsApp Quick Quote
-                </Button>
-              </a>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* Cinematic Digital Future City Hero */}
+      <CinematicHero scene={CINEMATIC_SCENES.webDevelopment} />
 
       {/* Package Tiers */}
       <section className="py-20 bg-white border-b border-slate-200">

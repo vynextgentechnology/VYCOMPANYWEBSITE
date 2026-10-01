@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navigation } from "@/components/Navigation";
+import { CinematicHero, CINEMATIC_SCENES } from "@/components/cinematic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ import {
   Sparkles,
   Layers,
   Send,
+  Download,
   Linkedin,
   Instagram,
   Facebook,
@@ -111,48 +113,8 @@ export default function Enquiry() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-600/20 selection:text-blue-300 overflow-x-hidden">
       <Navigation />
 
-      {/* Hero Header */}
-      <section className="relative pt-32 pb-8 lg:pt-36 lg:pb-12 bg-slate-950 text-white overflow-hidden">
-        <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[400px] bg-cyan-500/10 rounded-full blur-[150px] pointer-events-none" />
-        <div className="absolute inset-0 tech-grid-pattern-dark opacity-30 pointer-events-none" />
-
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 text-center max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-cyan-300 text-xs sm:text-sm font-semibold mb-4 backdrop-blur-md">
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-              <span>DIRECT CLIENT INTAKE • RAPID CONSULTATION</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white mb-3">
-              Contact & Project <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">Enquiry</span>
-            </h1>
-
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
-              Reach out for custom software inquiries, live demos, or technical consulting. We respond within 2 hours.
-            </p>
-
-            <div className="flex flex-wrap justify-center gap-3 mt-6 text-xs text-slate-400">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800">
-                <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                2-Hour Quick Response
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                100% Free Consultation
-              </span>
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800">
-                <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                Custom Tailored Solutions
-              </span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* Cinematic Communication Hub Hero */}
+      <CinematicHero scene={CINEMATIC_SCENES.enquiry} />
 
       {/* Primary Dual Contact & Direct Inquiry Section */}
       <section id="contact-form" className="pb-16 pt-2 bg-slate-950 text-white relative z-10">
@@ -222,6 +184,23 @@ export default function Enquiry() {
                         <p className="font-medium text-white">Karur, Tamil Nadu, India</p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Official Brochure Download Box */}
+                  <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/20 backdrop-blur-md">
+                    <p className="text-xs font-semibold text-cyan-300 mb-1">Company Profile & Catalog</p>
+                    <p className="text-[11px] text-slate-400 mb-3">Download our latest services brochure and tech specifications.</p>
+                    <a href="/api/download/brochure" download="VY-NextGen-Technologies-Brochure.pdf" className="block w-full">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full rounded-xl border-cyan-500/40 bg-cyan-900/20 text-cyan-200 hover:bg-cyan-800/30 font-semibold flex items-center justify-center gap-2"
+                      >
+                        <Download className="w-4 h-4 text-cyan-400" />
+                        <span>Download file</span>
+                      </Button>
+                    </a>
                   </div>
                 </div>
 

@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { Navigation } from "@/components/Navigation";
+import { CinematicHero, CINEMATIC_SCENES } from "@/components/cinematic";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { 
@@ -179,68 +180,14 @@ export default function About() {
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/20 selection:text-cyan-300 font-sans overflow-x-hidden">
       <Navigation />
 
-      {/* 1. Cinematic Hero Section with Ambient Glows */}
-      <section className="relative pt-32 pb-24 lg:pt-44 lg:pb-32 bg-slate-950 text-white overflow-hidden">
-        {/* Ambient Glow Spheres (Zyvex Style) */}
-        <div className="absolute top-10 left-1/4 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none animate-pulse-slow" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[400px] bg-cyan-500/10 rounded-full blur-[150px] pointer-events-none animate-pulse-slow" />
-        <div className="absolute inset-0 tech-grid-pattern-dark opacity-30 pointer-events-none" />
-
-        <div className="container mx-auto px-4 lg:px-8 relative z-10 text-center max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-blue-500/10 border border-cyan-500/30 text-cyan-300 text-xs sm:text-sm font-semibold mb-8 backdrop-blur-md shadow-lg shadow-cyan-500/10">
-              <img src={logoImg} alt="VY NextGen Logo" className="h-5 w-auto rounded object-contain" />
-              <span className="font-mono tracking-wide">// VY NEXTGEN TECHNOLOGIES • EST. 2025</span>
-            </div>
-
-            {/* Main Animated Headline */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] mb-6 text-white">
-              <span className="text-white">Pioneering</span>{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">
-                Digital Evolution
-              </span>{" "}
-              <br className="hidden sm:inline" />
-              <span className="text-white">from Karur to the World</span>
-            </h1>
-
-            {/* Subheading */}
-            <p className="text-base sm:text-lg md:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto font-normal px-2 mb-10">
-              We engineer mission-critical websites, scalable GST billing software, and custom cloud ERP platforms while cultivating tomorrow's software developers.
-            </p>
-
-            {/* Live Metrics Showcase */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto pt-6 border-t border-slate-800/80">
-              {[
-                { val: "50+", label: "Projects Delivered" },
-                { val: "99.9%", label: "Uptime Architecture" },
-                { val: "100+", label: "Interns Mentored" },
-                { val: "6 Mos", label: "Free SLA Warranty" },
-              ].map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
-                  className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 backdrop-blur-md"
-                >
-                  <p className="text-2xl sm:text-3xl font-black text-cyan-400 font-mono">{m.val}</p>
-                  <p className="text-xs text-slate-400 font-medium mt-1 uppercase tracking-wider">{m.label}</p>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Animated Mouse Scroll Indicator */}
-            <div className="mt-12 flex justify-center">
-              <MouseScrollIndicator targetId="leadership" />
-            </div>
-          </motion.div>
-        </div>
-      </section>
+      {/* 1. Cinematic AI Command Center Hero */}
+      <CinematicHero
+        scene={CINEMATIC_SCENES.about}
+        onScrollToContent={() => {
+          const el = document.getElementById("leadership");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
 
       {/* 2. Zyvex-Style Infinite Marquee Ticker Banner */}
       <div className="stats-banner py-4 bg-slate-900/90 border-y border-cyan-500/20 overflow-hidden relative backdrop-blur-xl">

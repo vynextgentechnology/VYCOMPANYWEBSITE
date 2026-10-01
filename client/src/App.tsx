@@ -10,6 +10,7 @@ import { Footer } from "@/components/Footer";
 import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { CustomCursor } from "@/components/CustomCursor";
 import { ScrollProgressBar, ScrollToTopButton } from "@/components/ScrollAnimation";
+import { CinematicPageTransition } from "@/components/cinematic";
 
 // Critical landing page loaded directly for fastest Time to Interactive
 import Home from "@/pages/Home";
@@ -129,7 +130,9 @@ function MainContent() {
   return (
     <div className="flex flex-col min-h-screen overflow-x-clip w-full relative max-w-[100vw]">
       <main className="flex-grow overflow-x-clip w-full">
-        <Router />
+        <CinematicPageTransition>
+          <Router />
+        </CinematicPageTransition>
       </main>
       <Footer />
       <FloatingWhatsApp />

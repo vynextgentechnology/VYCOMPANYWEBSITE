@@ -7,3 +7,5 @@ vite.config.ts.*
 .env
 hero page audio/
 hero page pics/
+test-results/
+test-downloads/

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Navigation } from "@/components/Navigation";
+import { CinematicHero, CINEMATIC_SCENES } from "@/components/cinematic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -404,131 +405,8 @@ export default function Careers() {
       {/* Top Main Navigation */}
       <Navigation />
 
-      {/* ========================================================================= */}
-      {/* HERO SECTION (Starting Itself with Single Google Form) */}
-      {/* ========================================================================= */}
-      <section id="top" className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 bg-gradient-to-br from-slate-950 via-[#041d57] to-slate-950 text-white overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 blur-[100px] rounded-full pointer-events-none" />
-
-        {/* Subtle grid texture overlay */}
-        <div 
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
-          style={{
-            backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
-            backgroundSize: '24px 24px'
-          }}
-        />
-
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            
-            {/* Top Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: -15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/30 text-blue-300 text-xs sm:text-sm font-semibold backdrop-blur-md shadow-sm"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>We're Hiring • Current Job Vacancies & Careers</span>
-            </motion.div>
-
-            {/* Main Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15]"
-            >
-              Build the Future of Software with{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300">
-                VY NextGen Technologies
-              </span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-base sm:text-lg lg:text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed"
-            >
-              Join an energetic team of software architects, creative designers, and tech leaders in Karur, Tamil Nadu. Explore the open roles below and apply through our official Google Form.
-            </motion.p>
-
-            {/* Starting Google Form CTA (The Only One) */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="pt-4 flex flex-col items-center justify-center space-y-4"
-            >
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                <a
-                  href={GOOGLE_FORM_CAREERS_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  <Button
-                    className="w-full sm:w-auto min-h-[48px] rounded-full px-8 h-13 py-3.5 text-base font-bold bg-gradient-to-r from-blue-500 via-cyan-500 to-indigo-500 hover:from-blue-600 hover:via-cyan-600 hover:to-indigo-600 text-white shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all hover:scale-105"
-                  >
-                    <span>Apply via Official Google Form</span>
-                    <ExternalLink className="w-4 h-4 ml-2.5" />
-                  </Button>
-                </a>
-
-                <a href="#vacancies" className="w-full sm:w-auto">
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto min-h-[48px] rounded-full px-7 h-13 py-3.5 text-base font-semibold border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm transition-all"
-                  >
-                    <span>View Available Jobs Below</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </a>
-              </div>
-
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-xs text-blue-200">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Single official application form for all vacancies — select your role inside the form.</span>
-              </div>
-            </motion.div>
-
-            {/* Highlights Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="pt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto border-t border-slate-800/80"
-            >
-              <div className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <p className="text-2xl sm:text-3xl font-black text-white">7+</p>
-                <p className="text-xs text-slate-400 mt-1 font-medium">Open Positions</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <p className="text-2xl sm:text-3xl font-black text-cyan-400">100%</p>
-                <p className="text-xs text-slate-400 mt-1 font-medium">Mentorship & Growth</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400">Karur & Hybrid</p>
-                <p className="text-xs text-slate-400 mt-1 font-medium">Flexible Work Modes</p>
-              </div>
-              <div className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <p className="text-2xl sm:text-3xl font-black text-indigo-400">Quick Apply</p>
-                <p className="text-xs text-slate-400 mt-1 font-medium">Direct Google Form</p>
-              </div>
-            </motion.div>
-
-          </div>
-        </div>
-      </section>
+      {/* Cinematic Technology Operations Center Hero */}
+      <CinematicHero scene={CINEMATIC_SCENES.careers} />
 
       {/* ========================================================================= */}
       {/* WHY JOIN VY NEXTGEN / PERKS & CULTURE */}
